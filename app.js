@@ -1,9 +1,10 @@
 // URL WebApp Google Sheets
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec";
-let currentUser = null;
+
+let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
 let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
 
-// Navigation
+// --- NAVIGATION ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -25,7 +26,7 @@ document.getElementById('discord-login-btn')?.addEventListener('click', () => {
     window.location.href = DISCORD_OAUTH_URL;
 });
 
-// --- GESTION DU RETOUR OAUTH2 DISCORD ---
+// --- GESTION DU CHARGEMENT DE LA PAGE ET DU RETOUR DISCORD ---
 document.addEventListener('DOMContentLoaded', () => {
     renderActivityLog();
 
@@ -34,21 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const code = urlParams.get('code');
 
     if (code) {
-        // Nettoie l'URL pour enlever le ?code=... (pour faire propre)
+        // Nettoie l'URL pour enlever le ?code=...
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        // Simulation de connexion réussie (ou appel à votre backend/script pour échanger le code)
         console.log("Code d'autorisation Discord reçu :", code);
-        
-        // Exemple pour simuler un utilisateur connecté en attendant l'appel API Discord
+
+        // Simulation d'un utilisateur connecté
         currentUser = {
-            rpName: "Artisan du Clan", // Vous pourrez remplacer par le vrai pseudo récupéré via l'API Discord
+            rpName: "Artisan du Clan",
             discordTag: "Utilisateur Discord"
         };
 
-        // Mettre à jour l'affichage sur la page
-        updateUserUI();
+        // Sauvegarde de la connexion
+        localStorage.setItem('skyrim_current_user', JSON.stringify(currentUser));
     }
+
+    // Met à jour l'interface si un utilisateur est connecté
+    updateUserUI();
 });
 
 // Fonction pour mettre à jour l'interface utilisateur connectée
@@ -64,7 +67,7 @@ function updateUserUI() {
     }
 }
 
-// Journal de bord
+// --- JOURNAL DE BORD ---
 function logActivity(category, actionText) {
     const author = currentUser ? `${currentUser.rpName}` : "Anonyme";
     const dateStr = new Date().toLocaleDateString('fr-FR') + " " + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -85,11 +88,11 @@ function renderActivityLog() {
     });
 }
 
-// Modal Légale
+// --- MODAL LÉGALE ---
 document.getElementById('open-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal').classList.remove('hidden'));
 document.getElementById('close-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal').classList.add('hidden'));
 
-// Synchronisation Google Sheets
+// --- SYNCHRONISATION GOOGLE SHEETS ---
 async function syncWithGoogleSheets(data) {
     if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("TA_LINK")) return;
     try {
@@ -103,7 +106,3 @@ async function syncWithGoogleSheets(data) {
         console.error("Erreur de synchronisation Google Sheets:", err);
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    renderActivityLog();
-});
