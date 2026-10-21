@@ -1,26 +1,25 @@
-// URL WebApp Google Sheets
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzlXrQGGZRSQDCMYATwhxsm6O4d-Qa3SD2F8yRqkE-DGHeXkhr17EiZb4o07fLr7UD8/exec";
+// --- URL WEBAPP & VARIABLES GLOBALES ---
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec";
 
 let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
 let membersList = JSON.parse(localStorage.getItem('skyrim_members')) || [];
 let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
-let gemsStock = JSON.parse(localStorage.getItem('skyrim_gems_stock')) || [];
+let gemsStock = JSON.parse(localStorage.getItem('skyrim_gems_stock')) || [
+    { name: "Gemme insignifiante", state: "Vide", qty: 5 },
+    { name: "Gemme commune", state: "Pleine", qty: 2 }
+];
 
-// Fonction de synchronisation mise à jour
-async function syncWithGoogleSheets(data) {
-    if (!GOOGLE_SHEET_URL) return;
-    try {
-        await fetch(GOOGLE_SHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Permet l'envoi cross-domain vers Google
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        console.log("Données envoyées à Google Sheets :", data);
-    } catch (err) {
-        console.error("Erreur de synchronisation Google Sheets :", err);
-    }
-}
+// --- NAVIGATION PAR ONGLETS ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
+        if (targetTab) targetTab.classList.add('active');
+    });
+});
+
 // --- CONNEXION DISCORD OAUTH2 ---
 const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1562350704058961990&response_type=code&redirect_uri=https%3A%2F%2Fpsychotiiks.github.io%2FClan-Roche-Lame%2F&scope=identify";
 
@@ -32,6 +31,7 @@ document.getElementById('discord-login-btn')?.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', () => {
     renderActivityLog();
     renderMembers();
+    renderGemsStock();
 
     if (currentUser) {
         updateUserUI();
@@ -73,7 +73,7 @@ document.getElementById('registration-form')?.addEventListener('submit', (e) => 
     updateUserUI();
     renderMembers();
 
-    logActivity("Inscription", `${rpName} a rejoint le clan en tant que ${rpJob}.`);
+    logActivity("Inscription", `${rpName} a rejoint le clan en tant que${rpJob}.`);
 
     syncWithGoogleSheets({
         action: "register_member",
@@ -146,6 +146,13 @@ function logActivity(category, actionText) {
     
     localStorage.setItem('skyrim_activity_logs', JSON.stringify(activityLogs));
     renderActivityLog();
+
+    // Synchronisation Google Sheets
+    syncWithGoogleSheets({
+        author: author,
+        category: category,
+        actionText: actionText
+    });
 }
 
 function renderActivityLog() {
@@ -167,7 +174,7 @@ function renderActivityLog() {
     `).join('');
 }
 
-// --- GESTION DE LA FERMETURE DES MODALES ---
+// --- FERMETURE DES MODALES ---
 document.querySelectorAll('.close-modal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const targetModalId = btn.getAttribute('data-target');
@@ -177,44 +184,7 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => {
     });
 });
 
-// --- ENCHANTEMENT ---
-document.getElementById('open-sale-modal-btn')?.addEventListener('click', () => document.getElementById('sale-modal')?.classList.remove('hidden'));
-document.getElementById('sale-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const item = document.getElementById('sale-item').value;
-    const amount = parseInt(document.getElementById('sale-amount').value) || 0;
-
-    const goldElem = document.getElementById('total-enchantement-gold');
-    if (goldElem) {
-        goldElem.textContent = (parseInt(goldElem.textContent) || 0) + amount;
-    }
-
-    logActivity("Vente", `Vente de "${item}" pour ${amount} Septims.`);
-    document.getElementById('sale-modal')?.classList.add('hidden');
-    document.getElementById('sale-form').reset();
-});
-
-document.getElementById('add-recipe-btn')?.addEventListener('click', () => document.getElementById('recipe-modal')?.classList.remove('hidden'));
-document.getElementById('recipe-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('recipe-name').value;
-    const ingredients = document.getElementById('recipe-ingredients').value;
-
-    const tbody = document.getElementById('recipes-table-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${ingredients}</td></tr>`;
-    }
-
-    logActivity("Recette", `Nouvelle recette d'enchantement : "${name}".`);
-    document.getElementById('recipe-modal')?.classList.add('hidden');
-    document.getElementById('recipe-form').reset();
-});
 // --- GESTION DU STOCK DE GEMMES (ENCHANTEMENT) ---
-let gemsStock = JSON.parse(localStorage.getItem('skyrim_gems_stock')) || [
-    { name: "Gemme insignifiante", state: "Vide", qty: 5 },
-    { name: "Gemme commune", state: "Pleine", qty: 2 }
-];
-
 function renderGemsStock() {
     const tbody = document.getElementById('gems-unified-body');
     if (!tbody) return;
@@ -227,155 +197,4 @@ function renderGemsStock() {
     tbody.innerHTML = gemsStock.map(g => `
         <tr>
             <td><strong>${g.name}</strong></td>
-            <td><span class="role-badge" style="color: ${g.state === 'Pleine' ? '#ffd700' : '#8c8275'};">${g.state}</span></td>
-            <td>Quantité : <strong>${g.qty}</strong></td>
-        </tr>
-    `).join('');
-}
-
-// Écouteur sur le bouton d'ouverture de la modal de gemme
-document.getElementById('add-gem-btn')?.addEventListener('click', () => {
-    // Vérification optionnelle si l'utilisateur connecté est bien Enchanteur
-    if (currentUser && currentUser.job !== 'enchanteur') {
-        alert("Seul un Enchanteur du clan peut ajouter des gemmes au stock !");
-        return;
-    }
-    const modal = document.getElementById('gem-modal');
-    if (modal) modal.classList.remove('hidden');
-});
-
-// Écouteur sur la soumission du formulaire d'ajout de gemme
-document.getElementById('gem-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById('gem-name')?.value;
-    const state = document.getElementById('gem-state')?.value;
-    const qty = parseInt(document.getElementById('gem-qty')?.value) || 1;
-
-    if (!name || !state) return;
-
-    // Mise à jour ou ajout de la gemme dans le tableau
-    const existing = gemsStock.find(g => g.name === name && g.state === state);
-    if (existing) {
-        existing.qty += qty;
-    } else {
-        gemsStock.push({ name: name, state: state, qty: qty });
-    }
-
-    // Sauvegarde et mise à jour de l'affichage
-    localStorage.setItem('skyrim_gems_stock', JSON.stringify(gemsStock));
-    renderGemsStock();
-
-    // Journal d'activité
-    logActivity("Enchantement", `Ajout de gemmes : ${qty}x ${name} (${state}).`);
-
-    // Fermeture et réinitialisation de la modal
-    document.getElementById('gem-modal')?.classList.add('hidden');
-    document.getElementById('gem-form')?.reset();
-});
-
-// --- ALCHIMIE ---
-document.getElementById('add-ingredient-btn')?.addEventListener('click', () => document.getElementById('ingredient-modal')?.classList.remove('hidden'));
-document.getElementById('ingredient-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('ing-name').value;
-    const qty = document.getElementById('ing-qty').value;
-    const tbody = document.getElementById('ingredients-table-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
-    }
-    logActivity("Alchimie", `Ajout d'ingrédient : ${name} (x${qty})`);
-    document.getElementById('ingredient-modal')?.classList.add('hidden');
-    document.getElementById('ingredient-form').reset();
-});
-
-document.getElementById('add-potion-recipe-btn')?.addEventListener('click', () => document.getElementById('potion-modal')?.classList.remove('hidden'));
-document.getElementById('potion-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('pot-name').value;
-    const desc = document.getElementById('pot-desc').value;
-    const tbody = document.getElementById('potion-recipes-table-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${desc}</td></tr>`;
-    }
-    logActivity("Alchimie", `Nouvelle potion : ${name}`);
-    document.getElementById('potion-modal')?.classList.add('hidden');
-    document.getElementById('potion-form').reset();
-});
-
-// --- FORGE ---
-document.getElementById('add-forge-mat-btn')?.addEventListener('click', () => document.getElementById('forge-mat-modal')?.classList.remove('hidden'));
-document.getElementById('forge-mat-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('fmat-name').value;
-    const qty = document.getElementById('fmat-qty').value;
-    const tbody = document.getElementById('forge-materials-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
-    }
-    logActivity("Forge", `Ajout matériau : ${name} (x${qty})`);
-    document.getElementById('forge-mat-modal')?.classList.add('hidden');
-    document.getElementById('forge-mat-form').reset();
-});
-
-document.getElementById('add-forge-plan-btn')?.addEventListener('click', () => document.getElementById('forge-plan-modal')?.classList.remove('hidden'));
-document.getElementById('forge-plan-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('fplan-name').value;
-    const req = document.getElementById('fplan-req').value;
-    const tbody = document.getElementById('forge-plans-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${req}</td></tr>`;
-    }
-    logActivity("Forge", `Nouveau plan de forge : ${name}`);
-    document.getElementById('forge-plan-modal')?.classList.add('hidden');
-    document.getElementById('forge-plan-form').reset();
-});
-
-// --- COUTURIER ---
-document.getElementById('add-cloth-btn')?.addEventListener('click', () => document.getElementById('cloth-modal')?.classList.remove('hidden'));
-document.getElementById('cloth-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('cloth-name').value;
-    const qty = document.getElementById('cloth-qty').value;
-    const tbody = document.getElementById('cloth-stock-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
-    }
-    logActivity("Couture", `Ajout tissu : ${name} (x${qty})`);
-    document.getElementById('cloth-modal')?.classList.add('hidden');
-    document.getElementById('cloth-form').reset();
-});
-
-document.getElementById('add-pattern-btn')?.addEventListener('click', () => document.getElementById('pattern-modal')?.classList.remove('hidden'));
-document.getElementById('pattern-form')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('pat-name').value;
-    const req = document.getElementById('pat-req').value;
-    const tbody = document.getElementById('tailor-patterns-body');
-    if (tbody) {
-        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${req}</td></tr>`;
-    }
-    logActivity("Couture", `Nouveau patron : ${name}`);
-    document.getElementById('pattern-modal')?.classList.add('hidden');
-    document.getElementById('pattern-form').reset();
-});
-
-// --- MODAL LÉGALE ---
-document.getElementById('open-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal')?.classList.remove('hidden'));
-document.getElementById('close-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal')?.classList.add('hidden'));
-
-// --- SYNCHRONISATION GOOGLE SHEETS ---
-async function syncWithGoogleSheets(data) {
-    if (!GOOGLE_SHEET_URL) return;
-    try {
-        await fetch(GOOGLE_SHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-    } catch (err) {
-        console.error("Erreur de synchronisation Google Sheets :", err);
-    }
-}
+            <td><span class="role-badge" style="color: ${g.state === 'Pleine' ? '#ffd700
