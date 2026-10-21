@@ -7,6 +7,92 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Metamorphous&display=swap" rel="stylesheet">
 </head>
+    <!-- MODAL ALCHIMIE (Ingrédient & Potion) -->
+<div id="ingredient-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>🌱 Ajouter un Ingrédient</h3>
+        <form id="ingredient-form">
+            <div class="form-group"><label>Nom de l'ingrédient :</label><input type="text" id="ing-name" required placeholder="Ex: Sel de Feu"></div>
+            <div class="form-group"><label>Quantité :</label><input type="number" id="ing-qty" required value="1"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="ingredient-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="potion-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>🧪 Ajouter une Recette de Potion</h3>
+        <form id="potion-form">
+            <div class="form-group"><label>Nom de la Potion :</label><input type="text" id="pot-name" required placeholder="Ex: Potion de Soin Majeure"></div>
+            <div class="form-group"><label>Effets / Ingrédients :</label><input type="text" id="pot-desc" required placeholder="Ex: Aile de Papillon + Oeil de Saber"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="potion-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL FORGE (Matériau & Plan) -->
+<div id="forge-mat-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>⛏️ Ajouter un Matériau de Forge</h3>
+        <form id="forge-mat-form">
+            <div class="form-group"><label>Nom du Matériau :</label><input type="text" id="fmat-name" required placeholder="Ex: Lingot d'Ébène"></div>
+            <div class="form-group"><label>Quantité :</label><input type="number" id="fmat-qty" required value="1"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="forge-mat-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="forge-plan-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>🛡️ Ajouter un Plan de Forge</h3>
+        <form id="forge-plan-form">
+            <div class="form-group"><label>Nom de l'Armure / Arme :</label><input type="text" id="fplan-name" required placeholder="Ex: Cuirasse Draconique"></div>
+            <div class="form-group"><label>Composants requis :</label><input type="text" id="fplan-req" required placeholder="Ex: 3 Écailles de dragon + 2 Lingots"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="forge-plan-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL COUTURIER (Tissu & Patron) -->
+<div id="cloth-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>🧵 Ajouter un Tissu / Fil</h3>
+        <form id="cloth-form">
+            <div class="form-group"><label>Nom de l'étoffe :</label><input type="text" id="cloth-name" required placeholder="Ex: Cuir / Lin / Soie"></div>
+            <div class="form-group"><label>Quantité :</label><input type="number" id="cloth-qty" required value="1"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="cloth-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="pattern-modal" class="modal hidden">
+    <div class="modal-content skyrim-card">
+        <h3>👗 Ajouter un Patron de Couture</h3>
+        <form id="pattern-form">
+            <div class="form-group"><label>Nom du Vêtement :</label><input type="text" id="pat-name" required placeholder="Ex: Robe noble de Solitude"></div>
+            <div class="form-group"><label>Composants requis :</label><input type="text" id="pat-req" required placeholder="Ex: 4 Rouleaux de lin + 2 Fils"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" class="skyrim-btn">Ajouter</button>
+                <button type="button" class="skyrim-btn close-modal-btn" data-target="pattern-modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
 <body>
     <header class="skyrim-header">
         <div class="logo">
