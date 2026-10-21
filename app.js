@@ -75,9 +75,30 @@ document.getElementById('registration-form')?.addEventListener('submit', (e) => 
     // Fermeture de la modal
     document.getElementById('registration-modal')?.classList.add('hidden');
 
-    // Mise à jour de l'affichage
-    updateUserUI();
-    renderMembers();
+   // --- MISE À JOUR DE L'INTERFACE UTILISATEUR & DES RÔLES ---
+function updateUserUI() {
+    if (!currentUser) return;
+
+    const loginBtn = document.getElementById('discord-login-btn');
+    const userProfile = document.getElementById('user-profile');
+    const userName = document.getElementById('user-name');
+
+    if (loginBtn) loginBtn.classList.add('hidden');
+    if (userProfile) userProfile.classList.remove('hidden');
+    if (userName) userName.textContent = `${currentUser.rpName} (${currentUser.job})`;
+
+    // Gestion de l'affichage des boutons selon le rôle/métier de l'utilisateur
+    document.querySelectorAll('.role-restricted').forEach(btn => {
+        const requiredRole = btn.getAttribute('data-role');
+        // Si le rôle requis correspond au métier de l'utilisateur (ou si admin), on l'affiche
+        if (requiredRole && currentUser.job === requiredRole) {
+            btn.classList.remove('hidden');
+        } else {
+            // Optionnel : si vous voulez masquer les boutons des autres métiers
+            // btn.classList.add('hidden'); 
+        }
+    });
+}
 
     // Journal d'activité
     logActivity("Inscription", `${rpName} a rejoint le clan en tant que ${rpJob}.`);
