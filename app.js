@@ -1,11 +1,14 @@
 // --- URL WEBAPP GOOGLE SHEETS ---
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzQL2GOmpEekI00G0q13gqW8Je9-TwT-az1ACOD6q-r4aClwuIigtIezPqQGRPHjuP3/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec";
 
 let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
 let membersList = [];
 let activityLogs = [];
 let gemsStock = [];
 let recipesList = [];
+let ingredientsStock = [];
+let forgeStock = [];
+let clothStock = [];
 
 // --- NAVIGATION PAR ONGLETS ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -25,6 +28,13 @@ document.getElementById('discord-login-btn')?.addEventListener('click', () => {
     window.location.href = DISCORD_OAUTH_URL;
 });
 
+// --- DÉCONNEXION ---
+document.getElementById('logout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('skyrim_current_user');
+    currentUser = null;
+    window.location.reload();
+});
+
 // --- INITIALISATION & CHARGEMENT DEPUIS GOOGLE SHEETS ---
 document.addEventListener('DOMContentLoaded', async () => {
     if (currentUser) {
@@ -41,7 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Chargement global depuis la base de données Google Sheets
     await loadDataFromGoogleSheets();
 });
 
@@ -55,20 +64,25 @@ async function loadDataFromGoogleSheets() {
         gemsStock = data.gems || [];
         recipesList = data.recipes || [];
         activityLogs = data.logs || [];
+        ingredientsStock = data.ingredients || [];
+        forgeStock = data.forge || [];
+        clothStock = data.cloth || [];
 
         renderMembers();
         renderGemsStock();
         renderRecipes();
+        renderGenericStock('ingredients-table-body', ingredientsStock, 'alchimiste', 'Ingredients');
+        renderGenericStock('forge-materials-body', forgeStock, 'forgeron', 'Forge');
+        renderGenericStock('cloth-stock-body', clothStock, 'couturier', 'Couture');
         renderActivityLog();
     } catch (err) {
-        console.error("Erreur de chargement des données Google Sheets :", err);
+        console.error("Erreur de chargement Google Sheets :", err);
     }
 }
 
-// --- FORMULAIRE D'INSCRIPTION RP ---
+// --- INSCRIPTION ---
 document.getElementById('registration-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const rpName = document.getElementById('rp-name').value.trim();
     const rpJob = document.getElementById('rp-job').value;
 
@@ -98,7 +112,6 @@ document.getElementById('registration-form')?.addEventListener('submit', async (
     await loadDataFromGoogleSheets();
 });
 
-// --- MISE À JOUR DE L'INTERFACE UTILISATEUR & DES RÔLES ---
 function updateUserUI() {
     if (!currentUser) return;
 
@@ -120,78 +133,79 @@ function updateUserUI() {
     });
 }
 
-// --- AFFICHAGE DES MEMBRES ---
 function renderMembers() {
     const tbody = document.getElementById('members-list');
     if (!tbody) return;
-
     if (membersList.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Aucun membre inscrit.</td></tr>';
         return;
     }
-
-    let rows = membersList.map(m => {
-        return '<tr>' +
-            '<td><strong>' + (m.rpName || '-') + '</strong></td>' +
-            '<td><span class="role-badge">' + (m.job || '-') + '</span></td>' +
-            '<td>' + (m.joinedAt || '-') + '</td>' +
-        '</tr>';
-    }).join('');
-
-    tbody.innerHTML = '<thead><tr><th>Nom RP</th><th>Rôle / Métier</th><th>Date d\'inscription</th></tr></thead><tbody>' + rows + '</tbody>';
+    tbody.innerHTML = '<thead><tr><th>Nom RP</th><th>Rôle / Métier</th><th>Date d\'inscription</th></tr></thead><tbody>' +
+        membersList.map(m => '<tr><td><strong>' + (m.rpName || '-') + '</strong></td><td><span class="role-badge">' + (m.job || '-') + '</span></td><td>' + (m.joinedAt || '-') + '</td></tr>').join('') +
+        '</tbody>';
 }
 
-// --- JOURNAL DE BORD ---
 function renderActivityLog() {
     const tbody = document.getElementById('activity-log-body');
     if (!tbody) return;
-
     if (activityLogs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucune activité enregistrée.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucune activité.</td></tr>';
         return;
     }
-
-    tbody.innerHTML = activityLogs.map(log => {
-        return '<tr>' +
-            '<td>' + (log.date || '-') + '</td>' +
-            '<td><strong>' + (log.author || 'Anonyme') + '</strong></td>' +
-            '<td><span class="role-badge">' + (log.category || 'Général') + '</span></td>' +
-            '<td>' + (log.action || '-') + '</td>' +
-        '</tr>';
-    }).join('');
+    tbody.innerHTML = activityLogs.map(log => 
+        '<tr><td>' + (log.date || '-') + '</td><td><strong>' + (log.author || 'Anonyme') + '</strong></td><td><span class="role-badge">' + (log.category || 'Général') + '</span></td><td>' + (log.action || '-') + '</td></tr>'
+    ).join('');
 }
 
-// --- STOCK DE GEMMES (ENCHANTEMENT) ---
+// --- GEMMES (ENCHANTEMENT) ---
 function renderGemsStock() {
     const tbody = document.getElementById('gems-unified-body');
     if (!tbody) return;
 
     if (gemsStock.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Aucune gemme dans le stock.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucune gemme en stock.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = gemsStock.map(g => {
+    tbody.innerHTML = gemsStock.map((g, i) => {
         const badgeColor = g.state === 'Pleine' ? '#ffd700' : '#8c8275';
+        const isAllowed = currentUser && currentUser.job === 'enchanteur';
+        const actionBtn = isAllowed 
+            ? `<button class="skyrim-btn-small remove-gem-btn" data-index="${i}" style="background:#8b0000; color:#fff; border-color:#ff4500;">➖ Retirer 1</button>` 
+            : '-';
+
         return '<tr>' +
             '<td><strong>' + g.name + '</strong></td>' +
             '<td><span class="role-badge" style="color: ' + badgeColor + ';">' + g.state + '</span></td>' +
             '<td>Quantité : <strong>' + g.qty + '</strong></td>' +
+            '<td>' + actionBtn + '</td>' +
         '</tr>';
     }).join('');
+
+    document.querySelectorAll('.remove-gem-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const item = gemsStock[e.target.dataset.index];
+            if (!item) return;
+            await syncWithGoogleSheets({
+                action: "remove_gem",
+                name: item.name,
+                state: item.state,
+                qty: 1,
+                author: currentUser ? currentUser.rpName : "Anonyme",
+                category: "Enchantement",
+                actionText: "Retrait de gemmes : 1x " + item.name + " (" + item.state + ")"
+            });
+            await loadDataFromGoogleSheets();
+        });
+    });
 }
 
-document.getElementById('add-gem-btn')?.addEventListener('click', () => {
-    document.getElementById('gem-modal')?.classList.remove('hidden');
-});
-
+document.getElementById('add-gem-btn')?.addEventListener('click', () => document.getElementById('gem-modal')?.classList.remove('hidden'));
 document.getElementById('gem-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('gem-name')?.value;
     const state = document.getElementById('gem-state')?.value;
     const qty = parseInt(document.getElementById('gem-qty')?.value) || 1;
-
-    if (!name || !state) return;
 
     document.getElementById('gem-modal')?.classList.add('hidden');
     document.getElementById('gem-form')?.reset();
@@ -203,59 +217,74 @@ document.getElementById('gem-form')?.addEventListener('submit', async (e) => {
         qty: qty,
         author: currentUser ? currentUser.rpName : "Anonyme",
         category: "Enchantement",
-        actionText: "Ajout de gemme : " + qty + "x " + name + " (" + state + ")"
+        actionText: "Ajout de gemmes : " + qty + "x " + name + " (" + state + ")"
     });
 
     await loadDataFromGoogleSheets();
 });
 
-// --- RECETTES D'ENCHANTEMENT ---
-function renderRecipes() {
-    const tbody = document.getElementById('recipes-table-body');
+// --- RENDER UNIVERSEL DES STOCKS (ALCHIMIE / FORGE / COUTURE) ---
+function renderGenericStock(elementId, list, requiredRole, categoryName) {
+    const tbody = document.getElementById(elementId);
     if (!tbody) return;
 
-    if (recipesList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Aucune recette personnalisée.</td></tr>';
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Stock vide.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = recipesList.map(r => 
-        '<tr><td><strong>' + r.name + '</strong></td><td>' + r.ingredients + '</td></tr>'
-    ).join('');
+    tbody.innerHTML = list.map((item, i) => {
+        const isAllowed = currentUser && currentUser.job === requiredRole;
+        const actionBtn = isAllowed 
+            ? `<button class="skyrim-btn-small remove-item-btn" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; border-color:#ff4500;">➖ Retirer 1</button>` 
+            : '-';
+
+        return '<tr>' +
+            '<td><strong>' + item.name + '</strong></td>' +
+            '<td>Quantité : <strong>' + item.qty + '</strong></td>' +
+            '<td>' + actionBtn + '</td>' +
+        '</tr>';
+    }).join('');
+
+    tbody.querySelectorAll('.remove-item-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const index = e.target.dataset.index;
+            const sheetName = e.target.dataset.sheet;
+            const item = list[index];
+            if (!item) return;
+
+            await syncWithGoogleSheets({
+                action: "remove_item",
+                sheetName: sheetName,
+                name: item.name,
+                qty: 1,
+                author: currentUser ? currentUser.rpName : "Anonyme",
+                category: categoryName,
+                actionText: "Consommation/Retrait : 1x " + item.name
+            });
+
+            await loadDataFromGoogleSheets();
+        });
+    });
 }
 
-document.getElementById('add-recipe-btn')?.addEventListener('click', () => document.getElementById('recipe-modal')?.classList.remove('hidden'));
-document.getElementById('recipe-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('recipe-name').value;
-    const ingredients = document.getElementById('recipe-ingredients').value;
+function renderRecipes() {
+    const tbody = document.getElementById('recipes-table-body');
+    if (!tbody) return;
+    if (recipesList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Aucune recette.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = recipesList.map(r => '<tr><td><strong>' + r.name + '</strong></td><td>' + r.ingredients + '</td></tr>').join('');
+}
 
-    document.getElementById('recipe-modal')?.classList.add('hidden');
-    document.getElementById('recipe-form').reset();
-
-    await syncWithGoogleSheets({
-        action: "add_recipe",
-        category: "Enchantement",
-        name: name,
-        ingredients: ingredients,
-        author: currentUser ? currentUser.rpName : "Anonyme",
-        actionText: "Nouvelle recette d'enchantement : \"" + name + "\""
-    });
-
-    await loadDataFromGoogleSheets();
-});
-
-// --- FERMETURE DES MODALES ---
 document.querySelectorAll('.close-modal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const targetModalId = btn.getAttribute('data-target');
-        if (targetModalId) {
-            document.getElementById(targetModalId)?.classList.add('hidden');
-        }
+        if (targetModalId) document.getElementById(targetModalId)?.classList.add('hidden');
     });
 });
 
-// --- ENVOI DES DONNÉES À GOOGLE SHEETS ---
 async function syncWithGoogleSheets(data) {
     if (!GOOGLE_SHEET_URL) return;
     try {
