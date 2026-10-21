@@ -36,48 +36,48 @@
 
         <div class="tab-contents">
             <!-- ONGLET ENCHANTEMENT -->
-           <div id="tab-enchantement" class="tab-content active">
-    <div class="tab-header">
-        <div class="header-with-gold">
-            <div>
-                <h2>Académie d'Enchantement</h2>
-                <p>Gestion du stock de gemmes et grimoire de recettes</p>
+            <div id="tab-enchantement" class="tab-content active">
+                <div class="tab-header">
+                    <div class="header-with-gold">
+                        <div>
+                            <h2>Académie d'Enchantement</h2>
+                            <p>Gestion du stock de gemmes et grimoire de recettes</p>
+                        </div>
+                        <div class="gold-counter">🪙 <span id="total-enchantement-gold">0</span> Septims</div>
+                    </div>
+                </div>
+                <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="open-sale-modal-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
+                    <button id="add-gem-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">+ Ajouter Gemme au Stock</button>
+                </div>
+
+                <!-- TABLEAU UNIQUE DES GEMMES SPIRITUELLES -->
+                <section class="enchantment-section">
+                    <h3>🔮 Registre des Gemmes Spirituelles (Vides & Pleines)</h3>
+                    <table class="skyrim-table">
+                        <thead>
+                            <tr>
+                                <th>Type de Gemme</th>
+                                <th>État</th>
+                                <th>Quantité</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gems-unified-body">
+                            <!-- Rempli dynamiquement par le JS -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="enchantment-section margin-top-lg">
+                    <div class="section-header-inline">
+                        <h3>📜 Grimoire des Recettes Personnalisées</h3>
+                        <button id="add-recipe-btn" class="skyrim-btn-small role-restricted hidden" data-role="enchanteur">+ Ajouter une Recette</button>
+                    </div>
+                    <table class="skyrim-table">
+                        <tbody id="recipes-table-body"></tbody>
+                    </table>
+                </section>
             </div>
-            <div class="gold-counter">🪙 <span id="total-enchantement-gold">0</span> Septims</div>
-        </div>
-    </div>
-    <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="open-sale-modal-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
-        <button id="add-gem-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">+ Ajouter Gemme au Stock</button>
-    </div>
-
-    <!-- TABLEAU UNIQUE DES GEMMES SPIRITUELLES -->
-    <section class="enchantment-section">
-        <h3>🔮 Registre des Gemmes Spirituelles (Vides & Pleines)</h3>
-        <table class="skyrim-table">
-            <thead>
-                <tr>
-                    <th>Type de Gemme</th>
-                    <th>État</th>
-                    <th>Quantité</th>
-                </tr>
-            </thead>
-            <tbody id="gems-unified-body">
-                <!-- Rempli dynamiquement par le JS -->
-            </tbody>
-        </table>
-    </section>
-
-    <section class="enchantment-section margin-top-lg">
-        <div class="section-header-inline">
-            <h3>📜 Grimoire des Recettes Personnalisées</h3>
-            <button id="add-recipe-btn" class="skyrim-btn-small role-restricted hidden" data-role="enchanteur">+ Ajouter une Recette</button>
-        </div>
-        <table class="skyrim-table">
-            <tbody id="recipes-table-body"></tbody>
-        </table>
-    </section>
-</div>
 
             <!-- ONGLET ALCHIMIE -->
             <div id="tab-alchimie" class="tab-content">
@@ -90,7 +90,7 @@
                         <div class="gold-counter">🪙 <span id="total-alchimie-gold">0</span> Septims</div>
                     </div>
                 </div>
-                <div class="inventory-controls" style="margin-bottom:20px;">
+                <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
                     <button id="add-ingredient-btn" class="skyrim-btn role-restricted hidden" data-role="alchimiste">+ Ajouter Ingrédient</button>
                     <button id="add-potion-recipe-btn" class="skyrim-btn role-restricted hidden" data-role="alchimiste">+ Recette de Potion</button>
                 </div>
@@ -119,7 +119,7 @@
                         <div class="gold-counter">🪙 <span id="total-forge-gold">0</span> Septims</div>
                     </div>
                 </div>
-                <div class="inventory-controls" style="margin-bottom:20px;">
+                <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
                     <button id="add-forge-mat-btn" class="skyrim-btn role-restricted hidden" data-role="forgeron">+ Ajouter Matériau</button>
                     <button id="add-forge-plan-btn" class="skyrim-btn role-restricted hidden" data-role="forgeron">+ Ajouter Plan</button>
                 </div>
@@ -148,7 +148,7 @@
                         <div class="gold-counter">🪙 <span id="total-couturier-gold">0</span> Septims</div>
                     </div>
                 </div>
-                <div class="inventory-controls" style="margin-bottom:20px;">
+                <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
                     <button id="add-cloth-btn" class="skyrim-btn role-restricted hidden" data-role="couturier">+ Ajouter Tissu</button>
                     <button id="add-pattern-btn" class="skyrim-btn role-restricted hidden" data-role="couturier">+ Ajouter Patron</button>
                 </div>
@@ -258,6 +258,41 @@
         </div>
     </div>
 
+    <!-- MODAL AJOUT DE GEMME -->
+    <div id="gem-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>🔮 Ajouter une Gemme au Stock</h3>
+            <form id="gem-form">
+                <div class="form-group">
+                    <label>Nom / Taille de la Gemme :</label>
+                    <select id="gem-name" required>
+                        <option value="Gemme insignifiante">Gemme insignifiante</option>
+                        <option value="Gemme infime">Gemme infime</option>
+                        <option value="Gemme commune">Gemme commune</option>
+                        <option value="Gemme majeure">Gemme majeure</option>
+                        <option value="Gemme grandissante / suprême">Gemme suprême</option>
+                        <option value="Gemme noire">Gemme noire</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>État :</label>
+                    <select id="gem-state" required>
+                        <option value="Vide">Vide</option>
+                        <option value="Pleine">Pleine</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantité :</label>
+                    <input type="number" id="gem-qty" required value="1" min="1">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Ajouter au Stock</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="gem-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL ALCHIMIE -->
     <div id="ingredient-modal" class="modal hidden">
         <div class="modal-content skyrim-card">
@@ -345,12 +380,12 @@
         </div>
     </div>
 
+    <!-- FOOTER & MODAL LÉGALE -->
     <footer class="skyrim-footer">
         <p>© Clan Roche-Lame - Serveur Skyrim RP</p>
         <button id="open-legal-btn" class="legal-link">Conditions d'Utilisation & Confidentialité</button>
     </footer>
 
-    <!-- MODAL LEGAL -->
     <div id="legal-modal" class="modal hidden">
         <div class="modal-content skyrim-card legal-content">
             <h3>📜 Mentions Légales & Confidentialité</h3>
