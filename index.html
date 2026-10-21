@@ -36,41 +36,48 @@
 
         <div class="tab-contents">
             <!-- ONGLET ENCHANTEMENT -->
-            <div id="tab-enchantement" class="tab-content active">
-                <div class="tab-header">
-                    <div class="header-with-gold">
-                        <div>
-                            <h2>Académie d'Enchantement</h2>
-                            <p>Gestion des gemmes spirituelles et grimoire de recettes</p>
-                        </div>
-                        <div class="gold-counter">🪙 <span id="total-enchantement-gold">0</span> Septims</div>
-                    </div>
-                </div>
-                <div class="inventory-controls" style="margin-bottom:20px;">
-                    <button id="open-sale-modal-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
-                </div>
-                <section class="enchantment-section">
-                    <h3>🔮 Gemmes Spirituelles Vides</h3>
-                    <table class="skyrim-table">
-                        <tbody id="gems-empty-body"></tbody>
-                    </table>
-                </section>
-                <section class="enchantment-section margin-top-lg">
-                    <h3>✨ Gemmes Spirituelles Pleines</h3>
-                    <table class="skyrim-table">
-                        <tbody id="gems-filled-body"></tbody>
-                    </table>
-                </section>
-                <section class="enchantment-section margin-top-lg">
-                    <div class="section-header-inline">
-                        <h3>📜 Grimoire des Recettes Personnalisées</h3>
-                        <button id="add-recipe-btn" class="skyrim-btn-small role-restricted hidden" data-role="enchanteur">+ Ajouter une Recette</button>
-                    </div>
-                    <table class="skyrim-table">
-                        <tbody id="recipes-table-body"></tbody>
-                    </table>
-                </section>
+           <div id="tab-enchantement" class="tab-content active">
+    <div class="tab-header">
+        <div class="header-with-gold">
+            <div>
+                <h2>Académie d'Enchantement</h2>
+                <p>Gestion du stock de gemmes et grimoire de recettes</p>
             </div>
+            <div class="gold-counter">🪙 <span id="total-enchantement-gold">0</span> Septims</div>
+        </div>
+    </div>
+    <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="open-sale-modal-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
+        <button id="add-gem-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">+ Ajouter Gemme au Stock</button>
+    </div>
+
+    <!-- TABLEAU UNIQUE DES GEMMES SPIRITUELLES -->
+    <section class="enchantment-section">
+        <h3>🔮 Registre des Gemmes Spirituelles (Vides & Pleines)</h3>
+        <table class="skyrim-table">
+            <thead>
+                <tr>
+                    <th>Type de Gemme</th>
+                    <th>État</th>
+                    <th>Quantité</th>
+                </tr>
+            </thead>
+            <tbody id="gems-unified-body">
+                <!-- Rempli dynamiquement par le JS -->
+            </tbody>
+        </table>
+    </section>
+
+    <section class="enchantment-section margin-top-lg">
+        <div class="section-header-inline">
+            <h3>📜 Grimoire des Recettes Personnalisées</h3>
+            <button id="add-recipe-btn" class="skyrim-btn-small role-restricted hidden" data-role="enchanteur">+ Ajouter une Recette</button>
+        </div>
+        <table class="skyrim-table">
+            <tbody id="recipes-table-body"></tbody>
+        </table>
+    </section>
+</div>
 
             <!-- ONGLET ALCHIMIE -->
             <div id="tab-alchimie" class="tab-content">
