@@ -8,72 +8,136 @@ body {
     background: #0a0c0e url('https://www.transparenttextures.com/patterns/dark-leather.png');
     color: #c7bc9b;
     font-family: 'Cinzel', serif;
-    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px;
 }
 
+/* CONTENEUR PRINCIPAL CENTRÉ */
+.skyrim-container, .skyrim-header, .skyrim-footer {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* EN-TÊTE (HEADER) */
 .skyrim-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 2px solid #5a4a32;
     padding-bottom: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    background: rgba(18, 22, 28, 0.6);
+    padding: 15px 20px;
+    border-radius: 6px;
 }
 
 .clan-tag {
     color: #d4af37;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     letter-spacing: 2px;
 }
 
 .logo h1 {
     font-family: 'Metamorphous', cursive;
     color: #f1e4c3;
-    font-size: 2rem;
+    font-size: 2.2rem;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .subtitle {
     color: #8c8275;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-style: italic;
 }
 
+/* AUTHENTIFICATION & PROFILE */
+.auth-box {
+    display: flex;
+    align-items: center;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(26, 21, 10, 0.8);
+    border: 1px solid #d4af37;
+    padding: 6px 14px;
+    border-radius: 4px;
+    color: #ffd700;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #d4af37;
+    object-fit: cover;
+}
+
+/* BOUTONS SKYRIM */
 .skyrim-btn, .skyrim-btn-small {
     background: #1c222a;
     color: #d4af37;
     border: 1px solid #5a4a32;
-    padding: 8px 16px;
-    font-family: 'Cinzel', serif;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.skyrim-btn:hover {
-    background: #3d3323;
-    color: #fff;
-    border-color: #d4af37;
-}
-
-.skyrim-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.tab-btn {
-    background: rgba(15, 18, 22, 0.8);
-    color: #8c8275;
-    border: 1px solid #3d3323;
     padding: 10px 18px;
     font-family: 'Cinzel', serif;
     cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 3px;
+}
+
+.skyrim-btn:hover, .skyrim-btn-small:hover {
+    background: #3d3323;
+    color: #fff;
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+/* ONGLETS DE NAVIGATION */
+.skyrim-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.tab-btn {
+    background: rgba(15, 18, 22, 0.9);
+    color: #8c8275;
+    border: 1px solid #3d3323;
+    padding: 12px 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+}
+
+.tab-btn:hover {
+    color: #d4af37;
+    border-color: #8c8275;
 }
 
 .tab-btn.active {
     color: #ffd700;
     border-color: #d4af37;
-    background: rgba(40, 32, 20, 0.9);
+    background: rgba(40, 32, 20, 0.95);
+    box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+/* CONTENU DE L'ONGLET */
+.tab-contents {
+    background: rgba(18, 22, 28, 0.85);
+    border: 1px solid #3d3323;
+    padding: 25px;
+    border-radius: 6px;
+    min-height: 400px;
 }
 
 .tab-content {
@@ -88,16 +152,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #3d3323;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .gold-counter {
     background: #1a150a;
     border: 1px solid #d4af37;
     color: #ffd700;
-    padding: 8px 15px;
+    padding: 8px 16px;
     font-weight: bold;
+    border-radius: 4px;
+    font-size: 1.05rem;
 }
 
+/* TABLEAUX SKYRIM */
 .skyrim-table {
     width: 100%;
     border-collapse: collapse;
@@ -107,13 +177,13 @@ body {
 .skyrim-table th {
     background: #12161c;
     color: #d4af37;
-    padding: 10px;
+    padding: 12px;
     border-bottom: 2px solid #5a4a32;
     text-align: left;
 }
 
 .skyrim-table td {
-    padding: 10px;
+    padding: 12px;
     border-bottom: 1px solid #2a2218;
 }
 
@@ -121,19 +191,22 @@ body {
     background: #101419;
     border: 1px solid #4a3d28;
     color: #fff;
-    padding: 4px;
-    width: 60px;
+    padding: 6px;
+    width: 70px;
     text-align: center;
+    border-radius: 3px;
 }
 
 .role-badge {
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 3px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     border: 1px solid #5a4a32;
     background: #12161c;
+    color: #d4af37;
 }
 
+/* MODALES */
 .modal {
     position: fixed;
     top: 0;
@@ -153,6 +226,7 @@ body {
     padding: 25px;
     width: 90%;
     max-width: 450px;
+    border-radius: 6px;
 }
 
 .form-group {
@@ -170,9 +244,11 @@ body {
     background: #0a0c0e;
     border: 1px solid #4a3d28;
     color: #e0d8c3;
-    padding: 8px;
+    padding: 10px;
+    border-radius: 3px;
 }
 
+/* UTILITAIRES */
 .hidden {
     display: none !important;
 }
@@ -181,12 +257,13 @@ body {
     margin-top: 30px;
 }
 
+/* PIED DE PAGE (FOOTER) */
 .skyrim-footer {
+    margin-top: auto;
+    padding-top: 25px;
     text-align: center;
-    margin-top: 40px;
-    border-top: 1px solid #3a3020;
-    padding-top: 15px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    color: #8c8275;
 }
 
 .legal-link {
@@ -195,4 +272,5 @@ body {
     color: #d4af37;
     text-decoration: underline;
     cursor: pointer;
+    margin-top: 5px;
 }
