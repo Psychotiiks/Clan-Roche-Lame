@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clan Roche-Lame - Bordeciel RP</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Metamorphous&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="skyrim-header">
+        <div class="logo">
+            <div class="clan-tag">⚡ SERVEUR SKYRIM RP ⚡</div>
+            <h1>Clan Roche-Lame</h1>
+            <p class="subtitle">Gestionnaire des Stocks & Registres d'Artisanat</p>
+        </div>
+        <div class="auth-box">
+            <button id="discord-login-btn" class="skyrim-btn gold-btn">Se connecter avec Discord</button>
+            <div id="user-profile" class="user-profile hidden">
+                <img id="user-avatar" src="" alt="Avatar" class="avatar">
+                <span id="user-name">Non connecté</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="skyrim-container">
+        <!-- BARRE DES ONGLETS -->
+        <nav class="skyrim-tabs">
+            <button class="tab-btn active" data-tab="enchantement">✨ Enchantement</button>
+            <button class="tab-btn" data-tab="alchimie">🧪 Alchimie</button>
+            <button class="tab-btn" data-tab="forge">🔨 Forge</button>
+            <button class="tab-btn" data-tab="couturier">🧵 Couturier</button>
+            <button class="tab-btn" data-tab="membres">📜 Membres</button>
+            <button class="tab-btn" data-tab="journal">📖 Journal de Bord</button>
+        </nav>
+
+        <div class="tab-contents">
+            <!-- ONGLET ENCHANTEMENT -->
+            <div id="tab-enchantement" class="tab-content active">
+                <div class="tab-header">
+                    <div class="header-with-gold">
+                        <div>
+                            <h2>Académie d'Enchantement</h2>
+                            <p>Gestion des gemmes spirituelles et grimoire de recettes</p>
+                        </div>
+                        <div class="gold-counter">🪙 <span id="total-enchantement-gold">0</span> Septims</div>
+                    </div>
+                </div>
+                <div class="inventory-controls" style="margin-bottom:20px;">
+                    <button id="open-sale-modal-btn" class="skyrim-btn role-restricted" data-role="enchanteur">💰 Enregistrer une Vente</button>
+                </div>
+                <section class="enchantment-section">
+                    <h3>🔮 Gemmes Spirituelles Vides</h3>
+                    <table class="skyrim-table">
+                        <tbody id="gems-empty-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>✨ Gemmes Spirituelles Pleines</h3>
+                    <table class="skyrim-table">
+                        <tbody id="gems-filled-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <div class="section-header-inline">
+                        <h3>📜 Grimoire des Recettes Personnalisées</h3>
+                        <button id="add-recipe-btn" class="skyrim-btn-small role-restricted" data-role="enchanteur">+ Ajouter une Recette</button>
+                    </div>
+                    <table class="skyrim-table">
+                        <tbody id="recipes-table-body"></tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ONGLET ALCHIMIE -->
+            <div id="tab-alchimie" class="tab-content">
+                <div class="tab-header">
+                    <div class="header-with-gold">
+                        <div>
+                            <h2>Laboratoire d'Alchimie</h2>
+                            <p>Gestion des ingrédients et elixirs</p>
+                        </div>
+                        <div class="gold-counter">🪙 <span id="total-alchimie-gold">0</span> Septims</div>
+                    </div>
+                </div>
+                <div class="inventory-controls" style="margin-bottom:20px;">
+                    <button id="add-ingredient-btn" class="skyrim-btn role-restricted" data-role="alchimiste">+ Ajouter Ingrédient</button>
+                    <button id="add-potion-recipe-btn" class="skyrim-btn role-restricted" data-role="alchimiste">+ Recette de Potion</button>
+                </div>
+                <section class="enchantment-section">
+                    <h3>🌱 Ingrédients Alchimiques</h3>
+                    <table class="skyrim-table">
+                        <tbody id="ingredients-table-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>🧪 Grimoire de Potions</h3>
+                    <table class="skyrim-table">
+                        <tbody id="potion-recipes-table-body"></tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ONGLET FORGE -->
+            <div id="tab-forge" class="tab-content">
+                <div class="tab-header">
+                    <div class="header-with-gold">
+                        <div>
+                            <h2>Grande Forge</h2>
+                            <p>Stock de minerais, lingots et armures</p>
+                        </div>
+                        <div class="gold-counter">🪙 <span id="total-forge-gold">0</span> Septims</div>
+                    </div>
+                </div>
+                <div class="inventory-controls" style="margin-bottom:20px;">
+                    <button id="add-forge-mat-btn" class="skyrim-btn role-restricted" data-role="forgeron">+ Ajouter Matériau</button>
+                    <button id="add-forge-plan-btn" class="skyrim-btn role-restricted" data-role="forgeron">+ Ajouter Plan</button>
+                </div>
+                <section class="enchantment-section">
+                    <h3>⛏️ Minerais, Lingots & Cuir</h3>
+                    <table class="skyrim-table">
+                        <tbody id="forge-materials-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>🛡️ Plans de Forge</h3>
+                    <table class="skyrim-table">
+                        <tbody id="forge-plans-body"></tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ONGLET COUTURIER -->
+            <div id="tab-couturier" class="tab-content">
+                <div class="tab-header">
+                    <div class="header-with-gold">
+                        <div>
+                            <h2>Atelier de Couture</h2>
+                            <p>Gestion des étoffes et patrons de tenues</p>
+                        </div>
+                        <div class="gold-counter">🪙 <span id="total-couturier-gold">0</span> Septims</div>
+                    </div>
+                </div>
+                <div class="inventory-controls" style="margin-bottom:20px;">
+                    <button id="add-cloth-btn" class="skyrim-btn role-restricted" data-role="couturier">+ Ajouter Tissu</button>
+                    <button id="add-pattern-btn" class="skyrim-btn role-restricted" data-role="couturier">+ Ajouter Patron</button>
+                </div>
+                <section class="enchantment-section">
+                    <h3>🧵 Étoffes & Fils</h3>
+                    <table class="skyrim-table">
+                        <tbody id="cloth-stock-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>👗 Patrons de Couture</h3>
+                    <table class="skyrim-table">
+                        <tbody id="tailor-patterns-body"></tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ONGLET MEMBRES -->
+            <div id="tab-membres" class="tab-content">
+                <div class="tab-header">
+                    <h2>📜 Registre des Artisans du Clan</h2>
+                    <p>Liste des membres inscrits via Discord</p>
+                </div>
+                <table class="skyrim-table">
+                    <tbody id="members-list"></tbody>
+                </table>
+            </div>
+
+            <!-- ONGLET JOURNAL DE BORD -->
+            <div id="tab-journal" class="tab-content">
+                <div class="tab-header">
+                    <h2>📖 Journal de Bord du Clan Roche-Lame</h2>
+                    <p>Historique direct des actions et modifications</p>
+                </div>
+                <table class="skyrim-table">
+                    <tbody id="activity-log-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL D'INSCRIPTION RP -->
+    <div id="registration-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>📜 Inscription au Clan Roche-Lame</h3>
+            <form id="registration-form">
+                <div class="form-group">
+                    <label>Nom RP en jeu :</label>
+                    <input type="text" id="rp-name" required placeholder="Ex: Torbjorn Main-d'Acier">
+                </div>
+                <div class="form-group">
+                    <label>Profession Principale :</label>
+                    <select id="rp-job">
+                        <option value="enchanteur">Enchanteur</option>
+                        <option value="alchimiste">Alchimiste</option>
+                        <option value="forgeron">Forgeron</option>
+                        <option value="couturier">Couturier</option>
+                        <option value="guerrier">Guerrier</option>
+                        <option value="chasseur">Chasseur</option>
+                        <option value="mineur">Mineur</option>
+                    </select>
+                </div>
+                <button type="submit" class="skyrim-btn">Valider</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="skyrim-footer">
+        <p>© Clan Roche-Lame - Serveur Skyrim RP</p>
+        <button id="open-legal-btn" class="legal-link">Conditions d'Utilisation & Confidentialité</button>
+    </footer>
+
+    <!-- MODAL LEGAL -->
+    <div id="legal-modal" class="modal hidden">
+        <div class="modal-content skyrim-card legal-content">
+            <h3>📜 Mentions Légales & Confidentialité</h3>
+            <p>Ce site est un outil communautaire non commercial pour le serveur Skyrim RP "Clan Roche-Lame". Les données collectées (ID Discord, Pseudo Discord, Nom RP) servent uniquement à la gestion des rôles et des stocks. Aucune donnée n'est revendue.</p>
+            <button id="close-legal-btn" class="skyrim-btn" style="margin-top:15px;">Compris</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #0a0c0e url('https://www.transparenttextures.com/patterns/dark-leather.png');
+    color: #c7bc9b;
+    font-family: 'Cinzel', serif;
+    padding: 20px;
+}
+
+.skyrim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #5a4a32;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.clan-tag {
+    color: #d4af37;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+.logo h1 {
+    font-family: 'Metamorphous', cursive;
+    color: #f1e4c3;
+    font-size: 2rem;
+}
+
+.subtitle {
+    color: #8c8275;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.skyrim-btn, .skyrim-btn-small {
+    background: #1c222a;
+    color: #d4af37;
+    border: 1px solid #5a4a32;
+    padding: 8px 16px;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.skyrim-btn:hover {
+    background: #3d3323;
+    color: #fff;
+    border-color: #d4af37;
+}
+
+.skyrim-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: rgba(15, 18, 22, 0.8);
+    color: #8c8275;
+    border: 1px solid #3d3323;
+    padding: 10px 18px;
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    color: #ffd700;
+    border-color: #d4af37;
+    background: rgba(40, 32, 20, 0.9);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.header-with-gold {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gold-counter {
+    background: #1a150a;
+    border: 1px solid #d4af37;
+    color: #ffd700;
+    padding: 8px 15px;
+    font-weight: bold;
+}
+
+.skyrim-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.skyrim-table th {
+    background: #12161c;
+    color: #d4af37;
+    padding: 10px;
+    border-bottom: 2px solid #5a4a32;
+    text-align: left;
+}
+
+.skyrim-table td {
+    padding: 10px;
+    border-bottom: 1px solid #2a2218;
+}
+
+.table-input {
+    background: #101419;
+    border: 1px solid #4a3d28;
+    color: #fff;
+    padding: 4px;
+    width: 60px;
+    text-align: center;
+}
+
+.role-badge {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    border: 1px solid #5a4a32;
+    background: #12161c;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: #12161c;
+    border: 1px solid #d4af37;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    color: #d4af37;
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    background: #0a0c0e;
+    border: 1px solid #4a3d28;
+    color: #e0d8c3;
+    padding: 8px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.margin-top-lg {
+    margin-top: 30px;
+}
+
+.skyrim-footer {
+    text-align: center;
+    margin-top: 40px;
+    border-top: 1px solid #3a3020;
+    padding-top: 15px;
+    font-size: 0.8rem;
+}
+
+.legal-link {
+    background: none;
+    border: none;
+    color: #d4af37;
+    text-decoration: underline;
+    cursor: pointer;
+}
+// URL WebApp Google Sheets
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec";
+let currentUser = null;
+let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
+
+// Navigation
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+});
+
+// Journal de bord
+function logActivity(category, actionText) {
+    const author = currentUser ? `${currentUser.rpName}` : "Anonyme";
+    const dateStr = new Date().toLocaleDateString('fr-FR') + " " + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    activityLogs.unshift({ date: dateStr, author: author, category: category, action: actionText });
+    if (activityLogs.length > 100) activityLogs.pop();
+    localStorage.setItem('skyrim_activity_logs', JSON.stringify(activityLogs));
+    renderActivityLog();
+}
+
+function renderActivityLog() {
+    const tbody = document.getElementById('activity-log-body');
+    if (!tbody) return;
+    tbody.innerHTML = activityLogs.length === 0 ? `<tr><td colspan="4" style="text-align:center;">Aucune activité enregistrée.</td></tr>` : '';
+    activityLogs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${log.date}</td><td>${log.author}</td><td>${log.category}</td><td>${log.action}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// Modal Légale
+document.getElementById('open-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal').classList.remove('hidden'));
+document.getElementById('close-legal-btn')?.addEventListener('click', () => document.getElementById('legal-modal').classList.add('hidden'));
+
+// Synchronisation Google Sheets
+async function syncWithGoogleSheets(data) {
+    if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("TA_LINK")) return;
+    try {
+        await fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    } catch (err) {
+        console.error("Erreur de synchronisation Google Sheets:", err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderActivityLog();
+});
+// --- CONNEXION DISCORD OAUTH2 ---
+const DISCORD_OAUTH_URL = "METTRE_VOTRE_LIEN_OAUTH2_DISCORD_ICI";
+
+document.getElementById('discord-login-btn')?.addEventListener('click', () => {
+    if (DISCORD_OAUTH_URL.includes("METTRE_VOTRE_LIEN")) {
+        alert("Veuillez configurer le lien OAuth2 Discord dans app.js !");
+        return;
+    }
+    // Redirige l'utilisateur vers la page de connexion Discord
+    window.location.href = DISCORD_OAUTH_URL;
+});
