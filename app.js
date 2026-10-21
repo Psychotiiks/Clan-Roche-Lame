@@ -209,6 +209,70 @@ document.getElementById('recipe-form')?.addEventListener('submit', (e) => {
     document.getElementById('recipe-modal')?.classList.add('hidden');
     document.getElementById('recipe-form').reset();
 });
+// --- GESTION DU STOCK DE GEMMES (ENCHANTEMENT) ---
+let gemsStock = JSON.parse(localStorage.getItem('skyrim_gems_stock')) || [
+    { name: "Gemme insignifiante", state: "Vide", qty: 5 },
+    { name: "Gemme commune", state: "Pleine", qty: 2 }
+];
+
+function renderGemsStock() {
+    const tbody = document.getElementById('gems-unified-body');
+    if (!tbody) return;
+
+    if (gemsStock.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Aucune gemme enregistrée dans le stock.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = gemsStock.map(g => `
+        <tr>
+            <td><strong>${g.name}</strong></td>
+            <td><span class="role-badge" style="color: ${g.state === 'Pleine' ? '#ffd700' : '#8c8275'};">${g.state}</span></td>
+            <td>Quantité : <strong>${g.qty}</strong></td>
+        </tr>
+    `).join('');
+}
+
+// Écouteur sur le bouton d'ouverture de la modal de gemme
+document.getElementById('add-gem-btn')?.addEventListener('click', () => {
+    // Vérification optionnelle si l'utilisateur connecté est bien Enchanteur
+    if (currentUser && currentUser.job !== 'enchanteur') {
+        alert("Seul un Enchanteur du clan peut ajouter des gemmes au stock !");
+        return;
+    }
+    const modal = document.getElementById('gem-modal');
+    if (modal) modal.classList.remove('hidden');
+});
+
+// Écouteur sur la soumission du formulaire d'ajout de gemme
+document.getElementById('gem-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('gem-name')?.value;
+    const state = document.getElementById('gem-state')?.value;
+    const qty = parseInt(document.getElementById('gem-qty')?.value) || 1;
+
+    if (!name || !state) return;
+
+    // Mise à jour ou ajout de la gemme dans le tableau
+    const existing = gemsStock.find(g => g.name === name && g.state === state);
+    if (existing) {
+        existing.qty += qty;
+    } else {
+        gemsStock.push({ name: name, state: state, qty: qty });
+    }
+
+    // Sauvegarde et mise à jour de l'affichage
+    localStorage.setItem('skyrim_gems_stock', JSON.stringify(gemsStock));
+    renderGemsStock();
+
+    // Journal d'activité
+    logActivity("Enchantement", `Ajout de gemmes : ${qty}x ${name} (${state}).`);
+
+    // Fermeture et réinitialisation de la modal
+    document.getElementById('gem-modal')?.classList.add('hidden');
+    document.getElementById('gem-form')?.reset();
+});
 
 // --- ALCHIMIE ---
 document.getElementById('add-ingredient-btn')?.addEventListener('click', () => document.getElementById('ingredient-modal')?.classList.remove('hidden'));
