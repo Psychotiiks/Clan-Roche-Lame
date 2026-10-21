@@ -1,6 +1,11 @@
 // URL WebApp Google Sheets
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzlXrQGGZRSQDCMYATwhxsm6O4d-Qa3SD2F8yRqkE-DGHeXkhr17EiZb4o07fLr7UD8/exec";
 
+let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
+let membersList = JSON.parse(localStorage.getItem('skyrim_members')) || [];
+let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
+let gemsStock = JSON.parse(localStorage.getItem('skyrim_gems_stock')) || [];
+
 // Fonction de synchronisation mise à jour
 async function syncWithGoogleSheets(data) {
     if (!GOOGLE_SHEET_URL) return;
