@@ -1,5 +1,5 @@
 // URL WebApp Google Sheets
-const GOOGLE_SHEET_URL = "TA_LINK_GOOGLE_SHEET_WEBAPP_ICI";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzHmNh6wEEMGNfylskirp6jstABo2fzeGqkHLx7bTFpdUhE4ulD7Vzp-Xpnkss4nVKl/exec";
 let currentUser = null;
 let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
 
@@ -14,7 +14,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // --- CONNEXION DISCORD OAUTH2 ---
-const DISCORD_OAUTH_URL = "METTRE_VOTRE_LIEN_OAUTH2_DISCORD_ICI";
+const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1562350704058961990&response_type=code&redirect_uri=https%3A%2F%2Fpsychotiiks.github.io%2FClan-Roche-Lame%2F&scope=identify";
 
 document.getElementById('discord-login-btn')?.addEventListener('click', () => {
     if (DISCORD_OAUTH_URL.includes("METTRE_VOTRE_LIEN")) {
