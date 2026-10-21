@@ -157,6 +157,29 @@ function renderActivityLog() {
     ).join('');
 }
 
+// --- GESTION DES VENTES (TOUS MÉTIERS) ---
+document.getElementById('open-sale-modal-btn')?.addEventListener('click', () => {
+    document.getElementById('sale-modal')?.classList.remove('hidden');
+});
+
+document.getElementById('sale-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const item = document.getElementById('sale-item').value;
+    const amount = parseInt(document.getElementById('sale-amount').value) || 0;
+
+    document.getElementById('sale-modal')?.classList.add('hidden');
+    document.getElementById('sale-form').reset();
+
+    await syncWithGoogleSheets({
+        action: "record_sale",
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        category: "Vente",
+        actionText: "Vente de \"" + item + "\" pour " + amount + " Septims."
+    });
+
+    await loadDataFromGoogleSheets();
+});
+
 // --- GEMMES (ENCHANTEMENT) ---
 function renderGemsStock() {
     const tbody = document.getElementById('gems-unified-body');
@@ -268,6 +291,78 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
     });
 }
 
+// --- FORMULAIRES D'AJOUT POUR LES AUTRES MÉTIERS ---
+
+// Alchimie
+document.getElementById('add-ingredient-btn')?.addEventListener('click', () => document.getElementById('ingredient-modal')?.classList.remove('hidden'));
+document.getElementById('ingredient-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('ing-name').value;
+    const qty = parseInt(document.getElementById('ing-qty').value) || 1;
+
+    document.getElementById('ingredient-modal')?.classList.add('hidden');
+    document.getElementById('ingredient-form').reset();
+
+    await syncWithGoogleSheets({
+        action: "add_item",
+        sheetName: "Ingredients",
+        name: name,
+        qty: qty,
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        category: "Alchimie",
+        actionText: "Ajout ingrédient : " + qty + "x " + name
+    });
+
+    await loadDataFromGoogleSheets();
+});
+
+// Forge
+document.getElementById('add-forge-mat-btn')?.addEventListener('click', () => document.getElementById('forge-mat-modal')?.classList.remove('hidden'));
+document.getElementById('forge-mat-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('fmat-name').value;
+    const qty = parseInt(document.getElementById('fmat-qty').value) || 1;
+
+    document.getElementById('forge-mat-modal')?.classList.add('hidden');
+    document.getElementById('forge-mat-form').reset();
+
+    await syncWithGoogleSheets({
+        action: "add_item",
+        sheetName: "Forge",
+        name: name,
+        qty: qty,
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        category: "Forge",
+        actionText: "Ajout matériau forge : " + qty + "x " + name
+    });
+
+    await loadDataFromGoogleSheets();
+});
+
+// Couture
+document.getElementById('add-cloth-btn')?.addEventListener('click', () => document.getElementById('cloth-modal')?.classList.remove('hidden'));
+document.getElementById('cloth-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cloth-name').value;
+    const qty = parseInt(document.getElementById('cloth-qty').value) || 1;
+
+    document.getElementById('cloth-modal')?.classList.add('hidden');
+    document.getElementById('cloth-form').reset();
+
+    await syncWithGoogleSheets({
+        action: "add_item",
+        sheetName: "Couture",
+        name: name,
+        qty: qty,
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        category: "Couture",
+        actionText: "Ajout étoffe : " + qty + "x " + name
+    });
+
+    await loadDataFromGoogleSheets();
+});
+
+// Recettes
 function renderRecipes() {
     const tbody = document.getElementById('recipes-table-body');
     if (!tbody) return;
@@ -278,6 +373,28 @@ function renderRecipes() {
     tbody.innerHTML = recipesList.map(r => '<tr><td><strong>' + r.name + '</strong></td><td>' + r.ingredients + '</td></tr>').join('');
 }
 
+document.getElementById('add-recipe-btn')?.addEventListener('click', () => document.getElementById('recipe-modal')?.classList.remove('hidden'));
+document.getElementById('recipe-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('recipe-name').value;
+    const ingredients = document.getElementById('recipe-ingredients').value;
+
+    document.getElementById('recipe-modal')?.classList.add('hidden');
+    document.getElementById('recipe-form').reset();
+
+    await syncWithGoogleSheets({
+        action: "add_recipe",
+        category: "Enchantement",
+        name: name,
+        ingredients: ingredients,
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        actionText: "Nouvelle recette d'enchantement : \"" + name + "\""
+    });
+
+    await loadDataFromGoogleSheets();
+});
+
+// FERMETURE DES MODALES
 document.querySelectorAll('.close-modal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const targetModalId = btn.getAttribute('data-target');
