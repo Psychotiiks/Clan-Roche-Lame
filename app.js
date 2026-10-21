@@ -1,21 +1,21 @@
 // URL WebApp Google Sheets
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzlXrQGGZRSQDCMYATwhxsm6O4d-Qa3SD2F8yRqkE-DGHeXkhr17EiZb4o07fLr7UD8/exec";
 
-let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
-let membersList = JSON.parse(localStorage.getItem('skyrim_members')) || [];
-let activityLogs = JSON.parse(localStorage.getItem('skyrim_activity_logs')) || [];
-
-// --- NAVIGATION PAR ONGLETS ---
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
-        if (targetTab) targetTab.classList.add('active');
-    });
-});
-
+// Fonction de synchronisation mise à jour
+async function syncWithGoogleSheets(data) {
+    if (!GOOGLE_SHEET_URL) return;
+    try {
+        await fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Permet l'envoi cross-domain vers Google
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        console.log("Données envoyées à Google Sheets :", data);
+    } catch (err) {
+        console.error("Erreur de synchronisation Google Sheets :", err);
+    }
+}
 // --- CONNEXION DISCORD OAUTH2 ---
 const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1562350704058961990&response_type=code&redirect_uri=https%3A%2F%2Fpsychotiiks.github.io%2FClan-Roche-Lame%2F&scope=identify";
 
