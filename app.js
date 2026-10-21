@@ -25,6 +25,45 @@ document.getElementById('discord-login-btn')?.addEventListener('click', () => {
     window.location.href = DISCORD_OAUTH_URL;
 });
 
+// --- GESTION DU RETOUR OAUTH2 DISCORD ---
+document.addEventListener('DOMContentLoaded', () => {
+    renderActivityLog();
+
+    // Vérifie si l'URL contient un code de retour Discord (?code=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+        // Nettoie l'URL pour enlever le ?code=... (pour faire propre)
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Simulation de connexion réussie (ou appel à votre backend/script pour échanger le code)
+        console.log("Code d'autorisation Discord reçu :", code);
+        
+        // Exemple pour simuler un utilisateur connecté en attendant l'appel API Discord
+        currentUser = {
+            rpName: "Artisan du Clan", // Vous pourrez remplacer par le vrai pseudo récupéré via l'API Discord
+            discordTag: "Utilisateur Discord"
+        };
+
+        // Mettre à jour l'affichage sur la page
+        updateUserUI();
+    }
+});
+
+// Fonction pour mettre à jour l'interface utilisateur connectée
+function updateUserUI() {
+    if (currentUser) {
+        const loginBtn = document.getElementById('discord-login-btn');
+        const userProfile = document.getElementById('user-profile');
+        const userName = document.getElementById('user-name');
+
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (userProfile) userProfile.classList.remove('hidden');
+        if (userName) userName.textContent = currentUser.rpName;
+    }
+}
+
 // Journal de bord
 function logActivity(category, actionText) {
     const author = currentUser ? `${currentUser.rpName}` : "Anonyme";
