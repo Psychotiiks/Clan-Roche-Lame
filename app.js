@@ -208,4 +208,100 @@ async function syncWithGoogleSheets(data) {
     } catch (err) {
         console.error("Erreur de synchronisation Google Sheets :", err);
     }
+
+// --- FERMETURE GÉNÉRALE DES MODALES ---
+document.querySelectorAll('.close-modal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetModalId = btn.getAttribute('data-target');
+        document.getElementById(targetModalId)?.classList.add('hidden');
+    });
+});
+
+// --- ALCHIMIE ---
+document.getElementById('add-ingredient-btn')?.addEventListener('click', () => document.getElementById('ingredient-modal').classList.remove('hidden'));
+document.getElementById('ingredient-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('ing-name').value;
+    const qty = document.getElementById('ing-qty').value;
+    const tbody = document.getElementById('ingredients-table-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
+    }
+    logActivity("Alchimie", `Ajout de l'ingrédient : ${name} (x${qty})`);
+    document.getElementById('ingredient-modal').classList.add('hidden');
+    document.getElementById('ingredient-form').reset();
+});
+
+document.getElementById('add-potion-recipe-btn')?.addEventListener('click', () => document.getElementById('potion-modal').classList.remove('hidden'));
+document.getElementById('potion-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('pot-name').value;
+    const desc = document.getElementById('pot-desc').value;
+    const tbody = document.getElementById('potion-recipes-table-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${desc}</td></tr>`;
+    }
+    logActivity("Alchimie", `Nouvelle recette de potion : ${name}`);
+    document.getElementById('potion-modal').classList.add('hidden');
+    document.getElementById('potion-form').reset();
+});
+
+// --- FORGE ---
+document.getElementById('add-forge-mat-btn')?.addEventListener('click', () => document.getElementById('forge-mat-modal').classList.remove('hidden'));
+document.getElementById('forge-mat-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('fmat-name').value;
+    const qty = document.getElementById('fmat-qty').value;
+    const tbody = document.getElementById('forge-materials-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
+    }
+    logActivity("Forge", `Ajout de matériau : ${name} (x${qty})`);
+    document.getElementById('forge-mat-modal').classList.add('hidden');
+    document.getElementById('forge-mat-form').reset();
+});
+
+document.getElementById('add-forge-plan-btn')?.addEventListener('click', () => document.getElementById('forge-plan-modal').classList.remove('hidden'));
+document.getElementById('forge-plan-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('fplan-name').value;
+    const req = document.getElementById('fplan-req').value;
+    const tbody = document.getElementById('forge-plans-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${req}</td></tr>`;
+    }
+    logActivity("Forge", `Nouveau plan de forge : ${name}`);
+    document.getElementById('forge-plan-modal').classList.add('hidden');
+    document.getElementById('forge-plan-form').reset();
+});
+
+// --- COUTURIER ---
+document.getElementById('add-cloth-btn')?.addEventListener('click', () => document.getElementById('cloth-modal').classList.remove('hidden'));
+document.getElementById('cloth-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cloth-name').value;
+    const qty = document.getElementById('cloth-qty').value;
+    const tbody = document.getElementById('cloth-stock-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>Quantité : ${qty}</td></tr>`;
+    }
+    logActivity("Couture", `Ajout de tissu : ${name} (x${qty})`);
+    document.getElementById('cloth-modal').classList.add('hidden');
+    document.getElementById('cloth-form').reset();
+});
+
+document.getElementById('add-pattern-btn')?.addEventListener('click', () => document.getElementById('pattern-modal').classList.remove('hidden'));
+document.getElementById('pattern-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('pat-name').value;
+    const req = document.getElementById('pat-req').value;
+    const tbody = document.getElementById('tailor-patterns-body');
+    if (tbody) {
+        tbody.innerHTML += `<tr><td><strong>${name}</strong></td><td>${req}</td></tr>`;
+    }
+    logActivity("Couture", `Nouveau patron de couture : ${name}`);
+    document.getElementById('pattern-modal').classList.add('hidden');
+    document.getElementById('pattern-form').reset();
+});
+    }
 }
