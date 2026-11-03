@@ -48,8 +48,9 @@
                     </div>
                 </div>
                 <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="open-sale-modal-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
+                    <button class="skyrim-btn role-restricted open-sale-modal-btn hidden" data-role="enchanteur">💰 Enregistrer une Vente</button>
                     <button id="add-gem-btn" class="skyrim-btn role-restricted hidden" data-role="enchanteur">+ Ajouter Gemme au Stock</button>
+                    <button class="skyrim-btn role-restricted open-recipe-modal-btn hidden" data-role="enchanteur" data-category="Enchantement">+ Ajouter Recette</button>
                 </div>
 
                 <section class="enchantment-section">
@@ -60,7 +61,6 @@
                                 <th>Type de Gemme</th>
                                 <th>État</th>
                                 <th>Quantité</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="gems-unified-body"></tbody>
@@ -69,11 +69,17 @@
 
                 <section class="enchantment-section margin-top-lg">
                     <div class="section-header-inline">
-                        <h3>📜 Grimoire des Recettes Personnalisées</h3>
-                        <button id="add-recipe-btn" class="skyrim-btn-small role-restricted hidden" data-role="enchanteur">+ Ajouter une Recette</button>
+                        <h3>📜 Grimoire d'Enchantement</h3>
                     </div>
                     <table class="skyrim-table">
-                        <tbody id="recipes-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>Nom de la Recette</th>
+                                <th>Composants</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipes-enchantement-body"></tbody>
                     </table>
                 </section>
             </div>
@@ -84,14 +90,15 @@
                     <div class="header-with-gold">
                         <div>
                             <h2>Laboratoire d'Alchimie</h2>
-                            <p>Gestion des ingrédients et éliXirs</p>
+                            <p>Gestion des ingrédients et élixirs</p>
                         </div>
                         <div class="gold-counter">🪙 <span id="total-alchimie-gold">0</span> Septims</div>
                     </div>
                 </div>
                 <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="skyrim-btn role-restricted open-sale-modal-btn hidden" data-role="alchimiste">💰 Enregistrer une Vente</button>
                     <button id="add-ingredient-btn" class="skyrim-btn role-restricted hidden" data-role="alchimiste">+ Ajouter Ingrédient</button>
-                    <button id="add-potion-recipe-btn" class="skyrim-btn role-restricted hidden" data-role="alchimiste">+ Recette de Potion</button>
+                    <button class="skyrim-btn role-restricted open-recipe-modal-btn hidden" data-role="alchimiste" data-category="Alchimie">+ Recette de Potion</button>
                 </div>
                 <section class="enchantment-section">
                     <h3>🌱 Ingrédients Alchimiques</h3>
@@ -99,11 +106,24 @@
                         <thead>
                             <tr>
                                 <th>Ingrédient</th>
+                                <th>Catégorie</th>
                                 <th>Quantité</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="ingredients-table-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>📜 Recettes d'Alchimie</h3>
+                    <table class="skyrim-table">
+                        <thead>
+                            <tr>
+                                <th>Nom du Potion / Élixir</th>
+                                <th>Composants</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipes-alchimie-body"></tbody>
                     </table>
                 </section>
             </div>
@@ -120,7 +140,9 @@
                     </div>
                 </div>
                 <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="skyrim-btn role-restricted open-sale-modal-btn hidden" data-role="forgeron">💰 Enregistrer une Vente</button>
                     <button id="add-forge-mat-btn" class="skyrim-btn role-restricted hidden" data-role="forgeron">+ Ajouter Matériau</button>
+                    <button class="skyrim-btn role-restricted open-recipe-modal-btn hidden" data-role="forgeron" data-category="Forge">+ Recette Forge</button>
                 </div>
                 <section class="enchantment-section">
                     <h3>⛏️ Minerais, Lingots & Cuir</h3>
@@ -128,11 +150,24 @@
                         <thead>
                             <tr>
                                 <th>Matériau</th>
+                                <th>Catégorie</th>
                                 <th>Quantité</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="forge-materials-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>📜 Patrons et Schémas de Forge</h3>
+                    <table class="skyrim-table">
+                        <thead>
+                            <tr>
+                                <th>Équipement / Arme</th>
+                                <th>Matériaux requis</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipes-forge-body"></tbody>
                     </table>
                 </section>
             </div>
@@ -149,7 +184,9 @@
                     </div>
                 </div>
                 <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="skyrim-btn role-restricted open-sale-modal-btn hidden" data-role="couturier">💰 Enregistrer une Vente</button>
                     <button id="add-cloth-btn" class="skyrim-btn role-restricted hidden" data-role="couturier">+ Ajouter Tissu</button>
+                    <button class="skyrim-btn role-restricted open-recipe-modal-btn hidden" data-role="couturier" data-category="Couture">+ Recette Couture</button>
                 </div>
                 <section class="enchantment-section">
                     <h3>🧵 Étoffes & Fils</h3>
@@ -157,11 +194,24 @@
                         <thead>
                             <tr>
                                 <th>Étoffe / Fil</th>
+                                <th>Catégorie</th>
                                 <th>Quantité</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="cloth-stock-body"></tbody>
+                    </table>
+                </section>
+                <section class="enchantment-section margin-top-lg">
+                    <h3>📜 Patrons de Couture</h3>
+                    <table class="skyrim-table">
+                        <thead>
+                            <tr>
+                                <th>Vêtement / Tissu</th>
+                                <th>Composants requis</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipes-couture-body"></tbody>
                     </table>
                 </section>
             </div>
@@ -190,7 +240,7 @@
         </div>
     </div>
 
-    <!-- MODALES -->
+    <!-- MODALES DE SAISIE ET DIALOGUES -->
     <div id="registration-modal" class="modal hidden">
         <div class="modal-content skyrim-card">
             <h3>📜 Inscription au Clan Roche-Lame</h3>
@@ -213,18 +263,53 @@
         </div>
     </div>
 
+    <!-- MODALE UNIVERSELLE POUR LES RECETTES -->
+    <div id="recipe-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3 id="recipe-modal-title">📜 Gestion d'une Recette</h3>
+            <form id="recipe-form">
+                <input type="hidden" id="recipe-index" value="">
+                <div class="form-group">
+                    <label>Métier / Catégorie :</label>
+                    <select id="recipe-category" required>
+                        <option value="Enchantement">Enchantement</option>
+                        <option value="Alchimie">Alchimie</option>
+                        <option value="Forge">Forge</option>
+                        <option value="Couture">Couture</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nom de la Recette :</label>
+                    <input type="text" id="recipe-name" required placeholder="Ex: Enchantement de Feu / Potion de Soin">
+                </div>
+                <div class="form-group">
+                    <label>Composants requis :</label>
+                    <input type="text" id="recipe-ingredients" required placeholder="Ex: Gemme commune + Lingot d'Acier">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Enregistrer</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="recipe-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE GEMME -->
     <div id="gem-modal" class="modal hidden">
         <div class="modal-content skyrim-card">
             <h3>🔮 Ajouter une Gemme au Stock</h3>
             <form id="gem-form">
                 <div class="form-group">
                     <label>Type de Gemme :</label>
-                    <select id="gem-name" required>
-                        <option value="Gemme Pleine">Gemme Pleine</option>
-                        <option value="Gemme Vide">Gemme Vide</option>
+                    <input type="text" id="gem-name" required placeholder="Ex: Gemme Sublime">
+                </div>
+                <div class="form-group">
+                    <label>État :</label>
+                    <select id="gem-state">
+                        <option value="Pleine">Pleine</option>
+                        <option value="Vide">Vide</option>
                     </select>
                 </div>
-            
                 <div class="form-group">
                     <label>Quantité :</label>
                     <input type="number" id="gem-qty" required value="1" min="1">
@@ -237,21 +322,85 @@
         </div>
     </div>
 
-    <div id="recipe-modal" class="modal hidden">
+    <!-- MODALE INGRÉDIENTS ALCHIMIE -->
+    <div id="ingredient-modal" class="modal hidden">
         <div class="modal-content skyrim-card">
-            <h3>📜 Ajouter une Recette</h3>
-            <form id="recipe-form">
+            <h3>🌱 Ajouter un Ingrédient</h3>
+            <form id="ingredient-form">
                 <div class="form-group">
-                    <label>Nom de la Recette :</label>
-                    <input type="text" id="recipe-name" required placeholder="Ex: Enchantement de Feu">
+                    <label>Nom de l'Ingrédient :</label>
+                    <input type="text" id="ing-name" required placeholder="Ex: Lavande">
                 </div>
                 <div class="form-group">
-                    <label>Composants :</label>
-                    <input type="text" id="recipe-ingredients" required placeholder="Ex: Gemme commune + Lingot d'Acier">
+                    <label>Quantité :</label>
+                    <input type="number" id="ing-qty" required value="1" min="1">
                 </div>
                 <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button type="submit" class="skyrim-btn">Enregistrer</button>
-                    <button type="button" class="skyrim-btn close-modal-btn" data-target="recipe-modal">Annuler</button>
+                    <button type="submit" class="skyrim-btn">Ajouter</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="ingredient-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE MATÉRIAUX FORGE -->
+    <div id="forge-mat-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>⛏️ Ajouter un Matériau de Forge</h3>
+            <form id="forge-mat-form">
+                <div class="form-group">
+                    <label>Nom du Matériau :</label>
+                    <input type="text" id="fmat-name" required placeholder="Ex: Lingot d'Acier">
+                </div>
+                <div class="form-group">
+                    <label>Quantité :</label>
+                    <input type="number" id="fmat-qty" required value="1" min="1">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Ajouter</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="forge-mat-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE ÉTOFFE COUTURE -->
+    <div id="cloth-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>🧵 Ajouter un Tissu / Étoffe</h3>
+            <form id="cloth-form">
+                <div class="form-group">
+                    <label>Nom du Tissu :</label>
+                    <input type="text" id="cloth-name" required placeholder="Ex: Rouleau de Lin">
+                </div>
+                <div class="form-group">
+                    <label>Quantité :</label>
+                    <input type="number" id="cloth-qty" required value="1" min="1">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Ajouter</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="cloth-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE VENTE -->
+    <div id="sale-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>💰 Enregistrer une Vente</h3>
+            <form id="sale-form">
+                <div class="form-group">
+                    <label>Objet / Potion vendu :</label>
+                    <input type="text" id="sale-item" required placeholder="Ex: Épée d'Acier enchantée">
+                </div>
+                <div class="form-group">
+                    <label>Montant (Septims) :</label>
+                    <input type="number" id="sale-amount" required min="1" placeholder="100">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Valider la Vente</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="sale-modal">Annuler</button>
                 </div>
             </form>
         </div>
