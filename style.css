@@ -185,6 +185,7 @@ body {
 .skyrim-table td {
     padding: 12px;
     border-bottom: 1px solid #2a2218;
+    vertical-align: middle;
 }
 
 .table-input {
@@ -192,9 +193,10 @@ body {
     border: 1px solid #4a3d28;
     color: #fff;
     padding: 6px;
-    width: 70px;
+    width: 65px;
     text-align: center;
     border-radius: 3px;
+    font-family: 'Cinzel', serif;
 }
 
 .role-badge {
@@ -257,20 +259,11 @@ body {
     margin-top: 30px;
 }
 
-/* PIED DE PAGE (FOOTER) */
+/* PIED DE PAGE */
 .skyrim-footer {
     margin-top: auto;
     padding-top: 25px;
     text-align: center;
     font-size: 0.85rem;
     color: #8c8275;
-}
-
-.legal-link {
-    background: none;
-    border: none;
-    color: #d4af37;
-    text-decoration: underline;
-    cursor: pointer;
-    margin-top: 5px;
 }
