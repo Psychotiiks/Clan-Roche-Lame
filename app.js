@@ -275,6 +275,7 @@ function renderRecipes() {
         const tbody = document.getElementById(cat.id);
         if (!tbody) return;
 
+        // Filtrer les recettes correspondant strictement à la catégorie
         const filtered = recipesList.filter(r => (r.category || 'Enchantement').toLowerCase() === cat.name.toLowerCase());
 
         if (filtered.length === 0) {
@@ -283,14 +284,15 @@ function renderRecipes() {
         }
 
         tbody.innerHTML = filtered.map((r) => {
-            const globalIndex = recipesList.findIndex(item => item === r);
+            // Retrouver l'index exact de la recette dans le tableau global recipesList
+            const globalIndex = recipesList.indexOf(r);
             const isAllowed = currentUser && (currentUser.job === cat.job);
             
             let actions = '-';
             if (isAllowed) {
                 actions = `
-                    <button class="skyrim-btn-small edit-recipe-btn" data-index="${globalIndex}" style="background:#2a2218; color:#ffd700;">Modifier</button>
-                    <button class="skyrim-btn-small delete-recipe-btn" data-index="${globalIndex}" style="background:#8b0000; color:#fff; margin-left:5px;">Supprimer</button>
+                    <button type="button" class="skyrim-btn-small edit-recipe-btn" data-index="${globalIndex}" style="background:#2a2218; color:#ffd700;">Modifier</button>
+                    <button type="button" class="skyrim-btn-small delete-recipe-btn" data-index="${globalIndex}" style="background:#8b0000; color:#fff; margin-left:5px;">Supprimer</button>
                 `;
             }
 
@@ -301,6 +303,43 @@ function renderRecipes() {
             </tr>`;
         }).join('');
     });
+
+    // Attacher les écouteurs sur les boutons Modifier nouvellement créés
+    document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = e.currentTarget.dataset.index;
+            const recipe = recipesList[index];
+            if (!recipe) return;
+
+            document.getElementById('recipe-index').value = index;
+            document.getElementById('recipe-category').value = recipe.category || 'Enchantement';
+            document.getElementById('recipe-name').value = recipe.name;
+            document.getElementById('recipe-ingredients').value = recipe.ingredients;
+            document.getElementById('recipe-modal-title').textContent = "📜 Modifier la Recette";
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        });
+    });
+
+    // Attacher les écouteurs sur les boutons Supprimer nouvellement créés
+    document.querySelectorAll('.delete-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const index = e.currentTarget.dataset.index;
+            const recipe = recipesList[index];
+            if (!recipe) return;
+
+            if (confirm(`Voulez-vous vraiment supprimer la recette "${recipe.name}" ?`)) {
+                await syncWithGoogleSheets({
+                    action: "delete_recipe",
+                    name: recipe.name,
+                    author: currentUser ? currentUser.rpName : "Anonyme",
+                    category: recipe.category || "Enchantement",
+                    actionText: `Suppression de la recette : ${recipe.name}`
+                });
+                await loadDataFromGoogleSheets();
+            }
+        });
+    });
+}
 
     document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
