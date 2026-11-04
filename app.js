@@ -174,10 +174,10 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
         if (isAllowed) {
             actionControls = `
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <button class="skyrim-btn-small qty-btn" data-action="minus" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; padding:4px 10px;">-</button>
+                    <button type="button" class="skyrim-btn-small qty-btn" data-action="minus" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; padding:4px 10px;">-</button>
                     <input type="number" class="table-input qty-input" data-sheet="${categoryName}" data-index="${i}" value="${item.qty}" min="0">
-                    <button class="skyrim-btn-small qty-btn" data-action="plus" data-sheet="${categoryName}" data-index="${i}" style="background:#006400; color:#fff; padding:4px 10px;">+</button>
-                    <button class="skyrim-btn-small delete-item-btn" data-sheet="${categoryName}" data-index="${i}" title="Supprimer" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
+                    <button type="button" class="skyrim-btn-small qty-btn" data-action="plus" data-sheet="${categoryName}" data-index="${i}" style="background:#006400; color:#fff; padding:4px 10px;">+</button>
+                    <button type="button" class="skyrim-btn-small delete-item-btn" data-sheet="${categoryName}" data-index="${i}" title="Supprimer" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
                 </div>
             `;
         }
@@ -191,9 +191,9 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
 
     tbody.querySelectorAll('.qty-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const index = e.target.dataset.index;
-            const sheetName = e.target.dataset.sheet;
-            const action = e.target.dataset.action;
+            const index = e.currentTarget.dataset.index;
+            const sheetName = e.currentTarget.dataset.sheet;
+            const action = e.currentTarget.dataset.action;
             let item = getStockListByName(sheetName)[index];
             if (!item) return;
 
@@ -206,9 +206,9 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
 
     tbody.querySelectorAll('.qty-input').forEach(input => {
         input.addEventListener('change', async (e) => {
-            const index = e.target.dataset.index;
-            const sheetName = e.target.dataset.sheet;
-            let newQty = parseInt(e.target.value);
+            const index = e.currentTarget.dataset.index;
+            const sheetName = e.currentTarget.dataset.sheet;
+            let newQty = parseInt(e.currentTarget.value);
             if (isNaN(newQty) || newQty < 0) newQty = 0;
 
             let item = getStockListByName(sheetName)[index];
@@ -220,8 +220,8 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
 
     tbody.querySelectorAll('.delete-item-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const index = e.target.dataset.index;
-            const sheetName = e.target.dataset.sheet;
+            const index = e.currentTarget.dataset.index;
+            const sheetName = e.currentTarget.dataset.sheet;
             let item = getStockListByName(sheetName)[index];
             if (!item) return;
 
@@ -262,7 +262,7 @@ async function updateItemQuantity(sheetName, index, newQty, item) {
     await loadDataFromGoogleSheets();
 }
 
-// --- GESTION UNIVERSELLE DES RECETTES PAR SÉPARATION D'ONGLETS ---
+// --- GESTION DES RECETTES PAR ONGLET ---
 function renderRecipes() {
     const categories = [
         { id: 'recipes-enchantement-body', name: 'Enchantement', job: 'enchanteur' },
@@ -275,8 +275,7 @@ function renderRecipes() {
         const tbody = document.getElementById(cat.id);
         if (!tbody) return;
 
-        // Filtrer les recettes correspondant strictement à la catégorie
-        const filtered = recipesList.filter(r => (r.category || 'Enchantement').toLowerCase() === cat.name.toLowerCase());
+        const filtered = recipesList.filter(r => (r.type || r.category || 'Enchantement').toLowerCase() === cat.name.toLowerCase());
 
         if (filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Aucune recette enregistrée.</td></tr>';
@@ -284,7 +283,6 @@ function renderRecipes() {
         }
 
         tbody.innerHTML = filtered.map((r) => {
-            // Retrouver l'index exact de la recette dans le tableau global recipesList
             const globalIndex = recipesList.indexOf(r);
             const isAllowed = currentUser && (currentUser.job === cat.job);
             
@@ -304,7 +302,6 @@ function renderRecipes() {
         }).join('');
     });
 
-    // Attacher les écouteurs sur les boutons Modifier nouvellement créés
     document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const index = e.currentTarget.dataset.index;
@@ -312,7 +309,7 @@ function renderRecipes() {
             if (!recipe) return;
 
             document.getElementById('recipe-index').value = index;
-            document.getElementById('recipe-category').value = recipe.category || 'Enchantement';
+            document.getElementById('recipe-category').value = recipe.type || recipe.category || 'Enchantement';
             document.getElementById('recipe-name').value = recipe.name;
             document.getElementById('recipe-ingredients').value = recipe.ingredients;
             document.getElementById('recipe-modal-title').textContent = "📜 Modifier la Recette";
@@ -320,7 +317,6 @@ function renderRecipes() {
         });
     });
 
-    // Attacher les écouteurs sur les boutons Supprimer nouvellement créés
     document.querySelectorAll('.delete-recipe-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
@@ -332,42 +328,7 @@ function renderRecipes() {
                     action: "delete_recipe",
                     name: recipe.name,
                     author: currentUser ? currentUser.rpName : "Anonyme",
-                    category: recipe.category || "Enchantement",
-                    actionText: `Suppression de la recette : ${recipe.name}`
-                });
-                await loadDataFromGoogleSheets();
-            }
-        });
-    });
-}
-
-    document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const index = e.target.dataset.index;
-            const recipe = recipesList[index];
-            if (!recipe) return;
-
-            document.getElementById('recipe-index').value = index;
-            document.getElementById('recipe-category').value = recipe.category || 'Enchantement';
-            document.getElementById('recipe-name').value = recipe.name;
-            document.getElementById('recipe-ingredients').value = recipe.ingredients;
-            document.getElementById('recipe-modal-title').textContent = "📜 Modifier la Recette";
-            document.getElementById('recipe-modal').classList.remove('hidden');
-        });
-    });
-
-    document.querySelectorAll('.delete-recipe-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const index = e.target.dataset.index;
-            const recipe = recipesList[index];
-            if (!recipe) return;
-
-            if (confirm(`Supprimer la recette "${recipe.name}" ?`)) {
-                await syncWithGoogleSheets({
-                    action: "delete_recipe",
-                    name: recipe.name,
-                    author: currentUser ? currentUser.rpName : "Anonyme",
-                    category: recipe.category || "Général",
+                    category: recipe.type || recipe.category || "Enchantement",
                     actionText: `Suppression de la recette : ${recipe.name}`
                 });
                 await loadDataFromGoogleSheets();
@@ -378,7 +339,7 @@ function renderRecipes() {
 
 document.querySelectorAll('.open-recipe-modal-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        const cat = e.target.getAttribute('data-category') || 'Enchantement';
+        const cat = e.currentTarget.getAttribute('data-category') || 'Enchantement';
         document.getElementById('recipe-index').value = "";
         document.getElementById('recipe-form').reset();
         document.getElementById('recipe-category').value = cat;
@@ -527,8 +488,8 @@ document.getElementById('sale-form')?.addEventListener('submit', async (e) => {
 
 // FERMETURE DES MODALES
 document.querySelectorAll('.close-modal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const targetModalId = btn.getAttribute('data-target');
+    btn.addEventListener('click', (e) => {
+        const targetModalId = e.currentTarget.getAttribute('data-target');
         if (targetModalId) document.getElementById(targetModalId)?.classList.add('hidden');
     });
 });
