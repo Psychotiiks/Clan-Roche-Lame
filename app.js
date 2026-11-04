@@ -1,5 +1,5 @@
 // --- URL WEBAPP GOOGLE SHEETS ---
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzc_tj4Uob5yJGJqnU1qvAyAt5MfKQ4Wkppm0hjneTkg813f3haSHMdePfADHN1V7om/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzK_6HcoJFwvNzt5UmQLPd0WmWnyBU61VxVsBzXksBaw0v8mA4Nsu0VNOBw-gjNMfEN/exec";
 
 let currentUser = JSON.parse(localStorage.getItem('skyrim_current_user')) || null;
 let membersList = [];
