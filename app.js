@@ -157,25 +157,29 @@ function renderActivityLog() {
     ).join('');
 }
 
-// --- RENDU DES STOCKS AVEC CASE NUMÉRIQUE & BOUTONS +/- ---
+// --- RENDU DES STOCKS (COLONNE STOCK SÉPARÉE DE LA MODIFICATION) ---
 function renderGenericStock(elementId, list, requiredRole, categoryName) {
     const tbody = document.getElementById(elementId);
     if (!tbody) return;
 
     if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Stock vide.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Stock vide.</td></tr>';
         return;
     }
 
     tbody.innerHTML = list.map((item, i) => {
         const isAllowed = currentUser && (currentUser.job === requiredRole);
         
-        let actionControls = `<strong>${item.qty}</strong>`;
+        // Stock réel affiché clairement
+        let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${item.qty}</strong>`;
+        
+        // Zone de modification séparée (uniquement si le rôle correspond)
+        let actionControls = `<span style="color: #8c8275; font-style: italic;">Lecture seule</span>`;
         if (isAllowed) {
             actionControls = `
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <button type="button" class="skyrim-btn-small qty-btn" data-action="minus" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; padding:4px 10px;">-</button>
-                    <input type="number" class="table-input qty-input" data-sheet="${categoryName}" data-index="${i}" value="${item.qty}" min="0">
+                    <input type="number" class="table-input qty-input" data-sheet="${categoryName}" data-index="${i}" value="${item.qty}" min="0" style="width: 60px; text-align: center;">
                     <button type="button" class="skyrim-btn-small qty-btn" data-action="plus" data-sheet="${categoryName}" data-index="${i}" style="background:#006400; color:#fff; padding:4px 10px;">+</button>
                     <button type="button" class="skyrim-btn-small delete-item-btn" data-sheet="${categoryName}" data-index="${i}" title="Supprimer" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
                 </div>
@@ -185,10 +189,12 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
         return '<tr>' +
             '<td><strong>' + item.name + '</strong></td>' +
             '<td>' + (item.state ? '<span class="role-badge" style="color:' + (item.state === 'Pleine' ? '#ffd700' : '#8c8275') + ';">' + item.state + '</span>' : categoryName) + '</td>' +
+            '<td style="text-align: center;">' + stockDisplay + '</td>' +
             '<td>' + actionControls + '</td>' +
         '</tr>';
     }).join('');
 
+    // Réattachement des événements (boutons +, -, input et poubelle)
     tbody.querySelectorAll('.qty-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
