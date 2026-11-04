@@ -262,7 +262,7 @@ async function updateItemQuantity(sheetName, index, newQty, item) {
     await loadDataFromGoogleSheets();
 }
 
-// --- GESTION UNIVERSELLE DES RECETTES (AFFICHAGE PAR ONGLETS, CRÉATION, MODIF & SUPPR) ---
+// --- GESTION UNIVERSELLE DES RECETTES PAR SÉPARATION D'ONGLETS ---
 function renderRecipes() {
     const categories = [
         { id: 'recipes-enchantement-body', name: 'Enchantement', job: 'enchanteur' },
@@ -373,7 +373,7 @@ document.getElementById('recipe-form')?.addEventListener('submit', async (e) => 
     await loadDataFromGoogleSheets();
 });
 
-// --- ENREGISTREMENT DES AUTRES STOCK (AJOUTS FORMULAIRES) ---
+// --- AJOUTS DE STOCK ---
 document.getElementById('add-gem-btn')?.addEventListener('click', () => document.getElementById('gem-modal')?.classList.remove('hidden'));
 document.getElementById('gem-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -494,7 +494,7 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => {
     });
 });
 
-// ENVOI À GOOGLE SHEETS
+// ENVOI DE DONNÉES À GOOGLE SHEETS
 async function syncWithGoogleSheets(data) {
     if (!GOOGLE_SHEET_URL) return;
     try {
