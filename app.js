@@ -157,7 +157,7 @@ function renderActivityLog() {
     ).join('');
 }
 
-// --- RENDU DES STOCKS (COLONNE STOCK SÉPARÉE DE LA MODIFICATION) ---
+// --- RENDU DES STOCKS (MODIFICATION PAR AJOUT/RETRAIT PRÉCIS) ---
 function renderGenericStock(elementId, list, requiredRole, categoryName) {
     const tbody = document.getElementById(elementId);
     if (!tbody) return;
@@ -170,18 +170,18 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
     tbody.innerHTML = list.map((item, i) => {
         const isAllowed = currentUser && (currentUser.job === requiredRole);
         
-        // Stock réel affiché clairement
+        // Stock réel affiché clairement au milieu
         let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${item.qty}</strong>`;
         
-        // Zone de modification séparée (uniquement si le rôle correspond)
+        // Zone d'action avec input de quantité à ajouter/retirer et boutons + / -
         let actionControls = `<span style="color: #8c8275; font-style: italic;">Lecture seule</span>`;
         if (isAllowed) {
             actionControls = `
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <button type="button" class="skyrim-btn-small qty-btn" data-action="minus" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; padding:4px 10px;">-</button>
-                    <input type="number" class="table-input qty-input" data-sheet="${categoryName}" data-index="${i}" value="${item.qty}" min="0" style="width: 60px; text-align: center;">
-                    <button type="button" class="skyrim-btn-small qty-btn" data-action="plus" data-sheet="${categoryName}" data-index="${i}" style="background:#006400; color:#fff; padding:4px 10px;">+</button>
-                    <button type="button" class="skyrim-btn-small delete-item-btn" data-sheet="${categoryName}" data-index="${i}" title="Supprimer" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
+                    <button type="button" class="skyrim-btn-small qty-action-btn" data-action="minus" data-sheet="${categoryName}" data-index="${i}" style="background:#8b0000; color:#fff; padding:4px 10px;" title="Retirer cette quantité">-</button>
+                    <input type="number" class="table-input qty-delta-input" data-sheet="${categoryName}" data-index="${i}" value="1" min="1" style="width: 60px; text-align: center;" title="Quantité à ajouter/retirer">
+                    <button type="button" class="skyrim-btn-small qty-action-btn" data-action="plus" data-sheet="${categoryName}" data-index="${i}" style="background:#006400; color:#fff; padding:4px 10px;" title="Ajouter cette quantité">+</button>
+                    <button type="button" class="skyrim-btn-small delete-item-btn" data-sheet="${categoryName}" data-index="${i}" title="Supprimer l'élément" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
                 </div>
             `;
         }
@@ -194,36 +194,30 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
         '</tr>';
     }).join('');
 
-    // Réattachement des événements (boutons +, -, input et poubelle)
-    tbody.querySelectorAll('.qty-btn').forEach(btn => {
+    // Gestion des clics sur les boutons + et - (prend en compte la valeur saisie dans l'input à côté)
+    tbody.querySelectorAll('.qty-action-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
             const sheetName = e.currentTarget.dataset.sheet;
             const action = e.currentTarget.dataset.action;
+            
             let item = getStockListByName(sheetName)[index];
             if (!item) return;
 
-            let newQty = parseInt(item.qty) + (action === 'plus' ? 1 : -1);
+            // Récupère la valeur entrée dans l'input de la même ligne (par défaut 1)
+            const row = e.currentTarget.closest('tr');
+            const deltaInput = row.querySelector('.qty-delta-input');
+            const delta = parseInt(deltaInput.value) || 1;
+
+            let currentQty = parseInt(item.qty) || 0;
+            let newQty = action === 'plus' ? (currentQty + delta) : (currentQty - delta);
             if (newQty < 0) newQty = 0;
 
             await updateItemQuantity(sheetName, index, newQty, item);
         });
     });
 
-    tbody.querySelectorAll('.qty-input').forEach(input => {
-        input.addEventListener('change', async (e) => {
-            const index = e.currentTarget.dataset.index;
-            const sheetName = e.currentTarget.dataset.sheet;
-            let newQty = parseInt(e.currentTarget.value);
-            if (isNaN(newQty) || newQty < 0) newQty = 0;
-
-            let item = getStockListByName(sheetName)[index];
-            if (!item) return;
-
-            await updateItemQuantity(sheetName, index, newQty, item);
-        });
-    });
-
+    // Suppression d'un élément
     tbody.querySelectorAll('.delete-item-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
