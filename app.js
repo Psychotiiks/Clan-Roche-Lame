@@ -9,6 +9,8 @@ let recipesList = [];
 let ingredientsStock = [];
 let forgeStock = [];
 let clothStock = [];
+let coffreStock = [];
+let currentCoffreFilter = "Toutes";
 
 // --- NAVIGATION PAR ONGLETS ---
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -67,12 +69,14 @@ async function loadDataFromGoogleSheets() {
         ingredientsStock = data.ingredients || [];
         forgeStock = data.forge || [];
         clothStock = data.cloth || [];
+        coffreStock = data.coffre || [];
 
         renderMembers();
         renderGenericStock('gems-unified-body', gemsStock, 'enchanteur', 'Gems');
         renderGenericStock('ingredients-table-body', ingredientsStock, 'alchimiste', 'Ingredients');
         renderGenericStock('forge-materials-body', forgeStock, 'forgeron', 'Forge');
         renderGenericStock('cloth-stock-body', clothStock, 'couturier', 'Couture');
+        renderCoffreStock();
         renderRecipes();
         renderActivityLog();
     } catch (err) {
@@ -118,10 +122,12 @@ function updateUserUI() {
     const loginBtn = document.getElementById('discord-login-btn');
     const userProfile = document.getElementById('user-profile');
     const userName = document.getElementById('user-name');
+    const addCoffreBtn = document.getElementById('add-coffre-btn');
 
     if (loginBtn) loginBtn.classList.add('hidden');
     if (userProfile) userProfile.classList.remove('hidden');
     if (userName) userName.textContent = currentUser.rpName + " (" + currentUser.job + ")";
+    if (addCoffreBtn) addCoffreBtn.classList.remove('hidden');
 
     document.querySelectorAll('.role-restricted').forEach(btn => {
         const requiredRole = btn.getAttribute('data-role');
@@ -157,7 +163,7 @@ function renderActivityLog() {
     ).join('');
 }
 
-// --- RENDU DES STOCKS (MODIFICATION PAR AJOUT/RETRAIT PRÉCIS) ---
+// --- RENDU DES STOCKS MÉTIERS (MODIFICATION PAR AJOUT/RETRAIT PRÉCIS) ---
 function renderGenericStock(elementId, list, requiredRole, categoryName) {
     const tbody = document.getElementById(elementId);
     if (!tbody) return;
@@ -170,10 +176,8 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
     tbody.innerHTML = list.map((item, i) => {
         const isAllowed = currentUser && (currentUser.job === requiredRole);
         
-        // Stock réel affiché clairement au milieu
         let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${item.qty}</strong>`;
         
-        // Zone d'action avec input de quantité à ajouter/retirer et boutons + / -
         let actionControls = `<span style="color: #8c8275; font-style: italic;">Lecture seule</span>`;
         if (isAllowed) {
             actionControls = `
@@ -194,7 +198,6 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
         '</tr>';
     }).join('');
 
-    // Gestion des clics sur les boutons + et - (prend en compte la valeur saisie dans l'input à côté)
     tbody.querySelectorAll('.qty-action-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
@@ -204,7 +207,6 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
             let item = getStockListByName(sheetName)[index];
             if (!item) return;
 
-            // Récupère la valeur entrée dans l'input de la même ligne (par défaut 1)
             const row = e.currentTarget.closest('tr');
             const deltaInput = row.querySelector('.qty-delta-input');
             const delta = parseInt(deltaInput.value) || 1;
@@ -217,7 +219,6 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {
         });
     });
 
-    // Suppression d'un élément
     tbody.querySelectorAll('.delete-item-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const index = e.currentTarget.dataset.index;
@@ -261,6 +262,156 @@ async function updateItemQuantity(sheetName, index, newQty, item) {
     });
     await loadDataFromGoogleSheets();
 }
+
+// --- GESTION DU COFFRE COMMUN ---
+document.querySelectorAll('.coffre-cat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.coffre-cat-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.borderColor = '#5a4a32';
+            b.style.color = '#d4af37';
+        });
+        e.currentTarget.classList.add('active');
+        e.currentTarget.style.borderColor = '#ffd700';
+        e.currentTarget.style.color = '#ffd700';
+
+        currentCoffreFilter = e.currentTarget.dataset.cat;
+        const titleEl = document.getElementById('coffre-current-title');
+        if (titleEl) {
+            titleEl.textContent = currentCoffreFilter === "Toutes" 
+                ? "📦 Contenu du Coffre Commun (Toutes catégories)" 
+                : `📦 Coffre Commun — Catégorie : ${currentCoffreFilter}`;
+        }
+        renderCoffreStock();
+    });
+});
+
+function renderCoffreStock() {
+    const tbody = document.getElementById('coffre-table-body');
+    if (!tbody) return;
+
+    const filteredList = currentCoffreFilter === "Toutes"
+        ? coffreStock
+        : coffreStock.filter(item => (item.category || 'Divers').toLowerCase() === currentCoffreFilter.toLowerCase());
+
+    if (!filteredList || filteredList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun objet dans cette catégorie.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filteredList.map((item) => {
+        const globalIndex = coffreStock.indexOf(item);
+        const isConnected = !!currentUser;
+
+        let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${item.qty}</strong>`;
+        let actionControls = `<span style="color: #8c8275; font-style: italic;">Connectez-vous pour interagir</span>`;
+
+        if (isConnected) {
+            actionControls = `
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <button type="button" class="skyrim-btn-small coffre-qty-btn" data-action="minus" data-index="${globalIndex}" style="background:#8b0000; color:#fff; padding:4px 10px;" title="Retirer cette quantité">-</button>
+                    <input type="number" class="table-input coffre-delta-input" value="1" min="1" style="width: 65px; text-align: center;" title="Quantité à ajouter/retirer">
+                    <button type="button" class="skyrim-btn-small coffre-qty-btn" data-action="plus" data-index="${globalIndex}" style="background:#006400; color:#fff; padding:4px 10px;" title="Ajouter cette quantité">+</button>
+                    <button type="button" class="skyrim-btn-small delete-coffre-btn" data-index="${globalIndex}" title="Supprimer l'objet" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
+                </div>
+            `;
+        }
+
+        return `<tr>
+            <td><strong>${item.name}</strong></td>
+            <td><span class="role-badge">${item.category || 'Divers'}</span></td>
+            <td style="text-align: center;">${stockDisplay}</td>
+            <td>${actionControls}</td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.coffre-qty-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const index = e.currentTarget.dataset.index;
+            const action = e.currentTarget.dataset.action;
+            const item = coffreStock[index];
+            if (!item) return;
+
+            const row = e.currentTarget.closest('tr');
+            const deltaInput = row.querySelector('.coffre-delta-input');
+            const delta = parseInt(deltaInput.value) || 1;
+
+            let currentQty = parseInt(item.qty) || 0;
+            let newQty = action === 'plus' ? (currentQty + delta) : (currentQty - delta);
+            if (newQty < 0) newQty = 0;
+
+            const authorName = currentUser ? currentUser.rpName : "Anonyme";
+            const verb = action === 'plus' ? `Ajout de ${delta}x` : `Retrait de ${delta}x`;
+
+            await syncWithGoogleSheets({
+                action: "update_qty",
+                sheetName: "Coffre",
+                name: item.name,
+                state: item.category || "Divers",
+                qty: newQty,
+                author: authorName,
+                category: "Coffre Commun",
+                actionText: `${verb} "${item.name}" (${item.category}) — Nouveau stock : ${newQty}`
+            });
+
+            await loadDataFromGoogleSheets();
+        });
+    });
+
+    tbody.querySelectorAll('.delete-coffre-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const index = e.currentTarget.dataset.index;
+            const item = coffreStock[index];
+            if (!item) return;
+
+            if (confirm(`Voulez-vous retirer définitivement "${item.name}" du Coffre Commun ?`)) {
+                const authorName = currentUser ? currentUser.rpName : "Anonyme";
+                await syncWithGoogleSheets({
+                    action: "delete_item",
+                    sheetName: "Coffre",
+                    name: item.name,
+                    author: authorName,
+                    category: "Coffre Commun",
+                    actionText: `Suppression de "${item.name}" (${item.category}) du Coffre Commun.`
+                });
+                await loadDataFromGoogleSheets();
+            }
+        });
+    });
+}
+
+document.getElementById('add-coffre-btn')?.addEventListener('click', () => {
+    const select = document.getElementById('coffre-category');
+    if (select && currentCoffreFilter !== "Toutes") {
+        select.value = currentCoffreFilter;
+    }
+    document.getElementById('coffre-modal')?.classList.remove('hidden');
+});
+
+document.getElementById('coffre-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const category = document.getElementById('coffre-category').value;
+    const name = document.getElementById('coffre-name').value.trim();
+    const qty = parseInt(document.getElementById('coffre-qty').value) || 1;
+
+    document.getElementById('coffre-modal')?.classList.add('hidden');
+    document.getElementById('coffre-form').reset();
+
+    const authorName = currentUser ? currentUser.rpName : "Anonyme";
+
+    await syncWithGoogleSheets({
+        action: "add_item",
+        sheetName: "Coffre",
+        name: name,
+        state: category,
+        qty: qty,
+        author: authorName,
+        category: "Coffre Commun",
+        actionText: `Dépôt dans le Coffre Commun : ${qty}x "${name}" (${category})`
+    });
+
+    await loadDataFromGoogleSheets();
+});
 
 // --- GESTION DES RECETTES PAR ONGLET ---
 function renderRecipes() {
@@ -373,7 +524,7 @@ document.getElementById('recipe-form')?.addEventListener('submit', async (e) => 
     await loadDataFromGoogleSheets();
 });
 
-// --- AJOUTS DE STOCK ---
+// --- AJOUTS DE STOCK MÉTIERS ---
 document.getElementById('add-gem-btn')?.addEventListener('click', () => document.getElementById('gem-modal')?.classList.remove('hidden'));
 document.getElementById('gem-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
