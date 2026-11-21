@@ -9,7 +9,7 @@ let recipesList = [];[cite: 2]
 let ingredientsStock = [];[cite: 2]
 let forgeStock = [];[cite: 2]
 let clothStock = [];[cite: 2]
-let coffreStock = JSON.parse(localStorage.getItem('skyrim_coffre_cache')) || [];
+let coffreStock = [];
 let currentCoffreFilter = "Toutes";
 
 // --- NAVIGATION PAR ONGLETS ---
@@ -43,10 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {[cite: 2]
         updateUserUI();[cite: 2]
     }[cite: 2]
 
-    if (coffreStock.length > 0) {
-        renderCoffreStock();
-    }
-
     const urlParams = new URLSearchParams(window.location.search);[cite: 2]
     const code = urlParams.get('code');[cite: 2]
 
@@ -60,14 +56,22 @@ document.addEventListener('DOMContentLoaded', async () => {[cite: 2]
     await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
-function saveCoffreCache() {
-    localStorage.setItem('skyrim_coffre_cache', JSON.stringify(coffreStock));
+function appendLocalLog(category, actionText) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('fr-FR') + " " + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    activityLogs.unshift({
+        date: dateStr,
+        author: currentUser ? currentUser.rpName : "Anonyme",
+        category: category || "Général",
+        action: actionText
+    });
+    renderActivityLog();
 }
 
 async function loadDataFromGoogleSheets() {[cite: 2]
     if (!GOOGLE_SHEET_URL) return;[cite: 2]
     try {[cite: 2]
-        const response = await fetch(GOOGLE_SHEET_URL + "?t=" + Date.now());
+        const response = await fetch(GOOGLE_SHEET_URL + "?t=" + Date.now());[cite: 2]
         const data = await response.json();[cite: 2]
 
         membersList = data.members || [];[cite: 2]
@@ -77,18 +81,11 @@ async function loadDataFromGoogleSheets() {[cite: 2]
         ingredientsStock = data.ingredients || [];[cite: 2]
         forgeStock = data.forge || [];[cite: 2]
         clothStock = data.cloth || [];[cite: 2]
-
-        // Fusionne intelligemment avec le cache local si le sheet est vide ou en retard
-        if (Array.isArray(data.coffre) && data.coffre.length > 0) {
-            coffreStock = data.coffre.map(item => ({
-                name: String(item.name || '').trim(),
-                category: String(item.category || 'Divers').trim(),
-                qty: parseInt(item.qty) || 0
-            }));
-            saveCoffreCache();
-        } else if (coffreStock.length > 0) {
-            renderCoffreStock();
-        }
+        coffreStock = (data.coffre || []).map(item => ({
+            name: String(item.name || '').trim(),
+            category: String(item.category || 'Divers').trim(),
+            qty: parseInt(item.qty) || 0
+        }));
 
         renderMembers();[cite: 2]
         renderGenericStock('gems-unified-body', gemsStock, 'enchanteur', 'Gems');[cite: 2]
@@ -120,19 +117,22 @@ document.getElementById('registration-form')?.addEventListener('submit', async (
     localStorage.setItem('skyrim_current_user', JSON.stringify(currentUser));[cite: 2]
     document.getElementById('registration-modal')?.classList.add('hidden');[cite: 2]
 
+    membersList.push({ rpName: rpName, job: rpJob, joinedAt: currentUser.joinedAt });
+    renderMembers();
     updateUserUI();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const msg = rpName + " a rejoint le clan en tant que " + rpJob + ".";
+    appendLocalLog("Inscription", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "register_member",[cite: 2]
         rpName: rpName,[cite: 2]
         job: rpJob,[cite: 2]
         date: currentUser.joinedAt,[cite: 2]
         author: rpName,[cite: 2]
         category: "Inscription",[cite: 2]
-        actionText: rpName + " a rejoint le clan en tant que " + rpJob + "."[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 function updateUserUI() {[cite: 2]
@@ -141,12 +141,12 @@ function updateUserUI() {[cite: 2]
     const loginBtn = document.getElementById('discord-login-btn');[cite: 2]
     const userProfile = document.getElementById('user-profile');[cite: 2]
     const userName = document.getElementById('user-name');[cite: 2]
-    const addCoffreBtn = document.getElementById('add-coffre-btn');
+    const addCoffreBtn = document.getElementById('add-coffre-btn');[cite: 2]
 
     if (loginBtn) loginBtn.classList.add('hidden');[cite: 2]
     if (userProfile) userProfile.classList.remove('hidden');[cite: 2]
     if (userName) userName.textContent = currentUser.rpName + " (" + currentUser.job + ")";[cite: 2]
-    if (addCoffreBtn) addCoffreBtn.classList.remove('hidden');
+    if (addCoffreBtn) addCoffreBtn.classList.remove('hidden');[cite: 2]
 
     document.querySelectorAll('.role-restricted').forEach(btn => {[cite: 2]
         const requiredRole = btn.getAttribute('data-role');[cite: 2]
@@ -182,7 +182,7 @@ function renderActivityLog() {[cite: 2]
     ).join('');[cite: 2]
 }[cite: 2]
 
-// --- RENDU DES STOCKS MÉTIERS (MODIFICATION PAR AJOUT/RETRAIT PRÉCIS) ---
+// --- RENDU DES STOCKS MÉTIERS ---
 function renderGenericStock(elementId, list, requiredRole, categoryName) {[cite: 2]
     const tbody = document.getElementById(elementId);[cite: 2]
     if (!tbody) return;[cite: 2]
@@ -218,43 +218,64 @@ function renderGenericStock(elementId, list, requiredRole, categoryName) {[cite:
     }).join('');[cite: 2]
 
     tbody.querySelectorAll('.qty-action-btn').forEach(btn => {[cite: 2]
-        btn.addEventListener('click', async (e) => {[cite: 2]
+        btn.addEventListener('click', (e) => {[cite: 2]
             const index = e.currentTarget.dataset.index;[cite: 2]
             const sheetName = e.currentTarget.dataset.sheet;[cite: 2]
             const action = e.currentTarget.dataset.action;[cite: 2]
 
-            let item = getStockListByName(sheetName)[index];[cite: 2]
+            const listRef = getStockListByName(sheetName);
+            const item = listRef[index];[cite: 2]
             if (!item) return;[cite: 2]
 
             const row = e.currentTarget.closest('tr');[cite: 2]
             const deltaInput = row.querySelector('.qty-delta-input');[cite: 2]
-            const delta = parseInt(deltaInput.value) || 1;[cite: 2]
+            const delta = Math.max(1, parseInt(deltaInput.value) || 1);[cite: 2]
 
-            let currentQty = parseInt(item.qty) || 0;[cite: 2]
-            let newQty = action === 'plus' ? (currentQty + delta) : (currentQty - delta);[cite: 2]
-            if (newQty < 0) newQty = 0;[cite: 2]
+            const currentQty = parseInt(item.qty) || 0;[cite: 2]
+            const newQty = action === 'plus' ? (currentQty + delta) : Math.max(0, currentQty - delta);[cite: 2]
 
-            await updateItemQuantity(sheetName, index, newQty, item);[cite: 2]
+            item.qty = newQty;
+            renderGenericStock(elementId, listRef, requiredRole, categoryName);
+
+            const msg = `Quantité de ${item.name} modifiée à ${newQty}`;
+            appendLocalLog(categoryName, msg);
+
+            syncWithGoogleSheets({[cite: 2]
+                action: "update_qty",[cite: 2]
+                sheetName: sheetName,[cite: 2]
+                name: item.name,[cite: 2]
+                state: item.state || "",[cite: 2]
+                qty: newQty,[cite: 2]
+                author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
+                category: sheetName,[cite: 2]
+                actionText: msg[cite: 2]
+            });[cite: 2]
         });[cite: 2]
     });[cite: 2]
 
     tbody.querySelectorAll('.delete-item-btn').forEach(btn => {[cite: 2]
-        btn.addEventListener('click', async (e) => {[cite: 2]
+        btn.addEventListener('click', (e) => {[cite: 2]
             const index = e.currentTarget.dataset.index;[cite: 2]
             const sheetName = e.currentTarget.dataset.sheet;[cite: 2]
-            let item = getStockListByName(sheetName)[index];[cite: 2]
+            const listRef = getStockListByName(sheetName);
+            const item = listRef[index];[cite: 2]
             if (!item) return;[cite: 2]
 
             if (confirm(`Voulez-vous supprimer "${item.name}" du stock ?`)) {[cite: 2]
-                await syncWithGoogleSheets({[cite: 2]
+                listRef.splice(index, 1);
+                renderGenericStock(elementId, listRef, requiredRole, categoryName);
+
+                const msg = `Suppression de ${item.name} du stock.`;
+                appendLocalLog(categoryName, msg);
+
+                syncWithGoogleSheets({[cite: 2]
                     action: "delete_item",[cite: 2]
                     sheetName: sheetName,[cite: 2]
                     name: item.name,[cite: 2]
                     author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
                     category: sheetName,[cite: 2]
-                    actionText: `Suppression de ${item.name} du stock.`[cite: 2]
+                    actionText: msg[cite: 2]
                 });[cite: 2]
-                await loadDataFromGoogleSheets();[cite: 2]
             }[cite: 2]
         });[cite: 2]
     });[cite: 2]
@@ -268,65 +289,51 @@ function getStockListByName(sheetName) {[cite: 2]
     return [];[cite: 2]
 }[cite: 2]
 
-async function updateItemQuantity(sheetName, index, newQty, item) {[cite: 2]
-    await syncWithGoogleSheets({[cite: 2]
-        action: "update_qty",[cite: 2]
-        sheetName: sheetName,[cite: 2]
-        name: item.name,[cite: 2]
-        state: item.state || "",[cite: 2]
-        qty: newQty,[cite: 2]
-        author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
-        category: sheetName,[cite: 2]
-        actionText: `Quantité de ${item.name} modifiée à ${newQty}`[cite: 2]
-    });[cite: 2]
-    await loadDataFromGoogleSheets();[cite: 2]
-}[cite: 2]
-
 // --- GESTION DU COFFRE COMMUN ---
-document.querySelectorAll('.coffre-cat-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.coffre-cat-btn').forEach(b => {
-            b.classList.remove('active');
-            b.style.borderColor = '#5a4a32';
-            b.style.color = '#d4af37';
-        });
-        e.currentTarget.classList.add('active');
-        e.currentTarget.style.borderColor = '#ffd700';
-        e.currentTarget.style.color = '#ffd700';
+document.querySelectorAll('.coffre-cat-btn').forEach(btn => {[cite: 2]
+    btn.addEventListener('click', (e) => {[cite: 2]
+        document.querySelectorAll('.coffre-cat-btn').forEach(b => {[cite: 2]
+            b.classList.remove('active');[cite: 2]
+            b.style.borderColor = '#5a4a32';[cite: 2]
+            b.style.color = '#d4af37';[cite: 2]
+        });[cite: 2]
+        e.currentTarget.classList.add('active');[cite: 2]
+        e.currentTarget.style.borderColor = '#ffd700';[cite: 2]
+        e.currentTarget.style.color = '#ffd700';[cite: 2]
 
-        currentCoffreFilter = e.currentTarget.dataset.cat;
-        const titleEl = document.getElementById('coffre-current-title');
-        if (titleEl) {
-            titleEl.textContent = currentCoffreFilter === "Toutes"
-                ? "📦 Contenu du Coffre Commun (Toutes catégories)"
-                : `📦 Coffre Commun — Catégorie : ${currentCoffreFilter}`;
-        }
-        renderCoffreStock();
-    });
-});
+        currentCoffreFilter = e.currentTarget.dataset.cat;[cite: 2]
+        const titleEl = document.getElementById('coffre-current-title');[cite: 2]
+        if (titleEl) {[cite: 2]
+            titleEl.textContent = currentCoffreFilter === "Toutes"[cite: 2]
+                ? "📦 Contenu du Coffre Commun (Toutes catégories)"[cite: 2]
+                : `📦 Coffre Commun — Catégorie : ${currentCoffreFilter}`;[cite: 2]
+        }[cite: 2]
+        renderCoffreStock();[cite: 2]
+    });[cite: 2]
+});[cite: 2]
 
-function renderCoffreStock() {
-    const tbody = document.getElementById('coffre-table-body');
-    if (!tbody) return;
+function renderCoffreStock() {[cite: 2]
+    const tbody = document.getElementById('coffre-table-body');[cite: 2]
+    if (!tbody) return;[cite: 2]
 
-    const filteredList = currentCoffreFilter === "Toutes"
-        ? coffreStock
-        : coffreStock.filter(item => (item.category || 'Divers').toLowerCase() === currentCoffreFilter.toLowerCase());
+    const filteredList = currentCoffreFilter === "Toutes"[cite: 2]
+        ? coffreStock[cite: 2]
+        : coffreStock.filter(item => (item.category || 'Divers').toLowerCase() === currentCoffreFilter.toLowerCase());[cite: 2]
 
-    if (!filteredList || filteredList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun objet dans cette catégorie.</td></tr>';
-        return;
-    }
+    if (!filteredList || filteredList.length === 0) {[cite: 2]
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun objet dans cette catégorie.</td></tr>';[cite: 2]
+        return;[cite: 2]
+    }[cite: 2]
 
-    tbody.innerHTML = filteredList.map((item) => {
-        const isConnected = !!currentUser;
-        const safeName = encodeURIComponent(item.name);
-        const safeCat = encodeURIComponent(item.category || 'Divers');
+    tbody.innerHTML = filteredList.map((item) => {[cite: 2]
+        const isConnected = !!currentUser;[cite: 2]
+        const safeName = encodeURIComponent(item.name);[cite: 2]
+        const safeCat = encodeURIComponent(item.category || 'Divers');[cite: 2]
 
-        let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${parseInt(item.qty) || 0}</strong>`;
-        let actionControls = `<span style="color: #8c8275; font-style: italic;">Connectez-vous pour interagir</span>`;
+        let stockDisplay = `<strong style="font-size: 1.1em; color: #ffd700;">${parseInt(item.qty) || 0}</strong>`;[cite: 2]
+        let actionControls = `<span style="color: #8c8275; font-style: italic;">Connectez-vous pour interagir</span>`;[cite: 2]
 
-        if (isConnected) {
+        if (isConnected) {[cite: 2]
             actionControls = `
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <button type="button" class="skyrim-btn-small coffre-qty-btn" data-action="minus" data-name="${safeName}" data-cat="${safeCat}" style="background:#8b0000; color:#fff; padding:4px 10px;" title="Retirer cette quantité">-</button>
@@ -334,132 +341,137 @@ function renderCoffreStock() {
                     <button type="button" class="skyrim-btn-small coffre-qty-btn" data-action="plus" data-name="${safeName}" data-cat="${safeCat}" style="background:#006400; color:#fff; padding:4px 10px;" title="Ajouter cette quantité">+</button>
                     <button type="button" class="skyrim-btn-small delete-coffre-btn" data-name="${safeName}" data-cat="${safeCat}" title="Supprimer l'objet" style="background:#333; color:#ff4500; border-color:#ff4500; margin-left: 10px;">🗑️</button>
                 </div>
-            `;
-        }
+            `;[cite: 2]
+        }[cite: 2]
 
         return `<tr>
             <td><strong>${item.name}</strong></td>
             <td><span class="role-badge">${item.category || 'Divers'}</span></td>
             <td style="text-align: center;">${stockDisplay}</td>
             <td>${actionControls}</td>
-        </tr>`;
-    }).join('');
+        </tr>`;[cite: 2]
+    }).join('');[cite: 2]
 
-    tbody.querySelectorAll('.coffre-qty-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const targetName = decodeURIComponent(e.currentTarget.dataset.name);
-            const targetCat = decodeURIComponent(e.currentTarget.dataset.cat);
-            const action = e.currentTarget.dataset.action;
+    tbody.querySelectorAll('.coffre-qty-btn').forEach(btn => {[cite: 2]
+        btn.addEventListener('click', (e) => {[cite: 2]
+            const targetName = decodeURIComponent(e.currentTarget.dataset.name);[cite: 2]
+            const targetCat = decodeURIComponent(e.currentTarget.dataset.cat);[cite: 2]
+            const action = e.currentTarget.dataset.action;[cite: 2]
 
-            const item = coffreStock.find(
-                i => String(i.name).trim().toLowerCase() === targetName.trim().toLowerCase() &&
-                     String(i.category || 'Divers').trim().toLowerCase() === targetCat.trim().toLowerCase()
-            );
-            if (!item) return;
+            const item = coffreStock.find([cite: 2]
+                i => String(i.name).trim().toLowerCase() === targetName.trim().toLowerCase() &&[cite: 2]
+                     String(i.category || 'Divers').trim().toLowerCase() === targetCat.trim().toLowerCase()[cite: 2]
+            );[cite: 2]
+            if (!item) return;[cite: 2]
 
-            const row = e.currentTarget.closest('tr');
-            const deltaInput = row.querySelector('.coffre-delta-input');
-            const delta = Math.max(1, parseInt(deltaInput.value) || 1);
+            const row = e.currentTarget.closest('tr');[cite: 2]
+            const deltaInput = row.querySelector('.coffre-delta-input');[cite: 2]
+            const delta = Math.max(1, parseInt(deltaInput.value) || 1);[cite: 2]
 
-            const currentQty = parseInt(item.qty) || 0;
-            const newQty = action === 'plus' ? (currentQty + delta) : Math.max(0, currentQty - delta);
+            const currentQty = parseInt(item.qty) || 0;[cite: 2]
+            const newQty = action === 'plus' ? (currentQty + delta) : Math.max(0, currentQty - delta);[cite: 2]
 
             item.qty = newQty;
-            saveCoffreCache();
-            renderCoffreStock();
+            renderCoffreStock();[cite: 2]
 
-            const authorName = currentUser ? currentUser.rpName : "Anonyme";
-            const verb = action === 'plus' ? `Ajout de ${delta}x` : `Retrait de ${delta}x`;
+            const authorName = currentUser ? currentUser.rpName : "Anonyme";[cite: 2]
+            const verb = action === 'plus' ? `Ajout de ${delta}x` : `Retrait de ${delta}x`;[cite: 2]
+            const msg = `${verb} "${item.name}" (${item.category}) — Nouveau stock : ${newQty}`;
+            appendLocalLog("Coffre Commun", msg);
 
-            await syncWithGoogleSheets({
-                action: "update_qty",
-                sheetName: "Coffre",
-                name: item.name,
-                state: item.category || "Divers",
-                qty: newQty,
-                author: authorName,
-                category: "Coffre Commun",
-                actionText: `${verb} "${item.name}" (${item.category}) — Nouveau stock : ${newQty}`
-            });
-        });
-    });
+            syncWithGoogleSheets({[cite: 2]
+                action: "update_qty",[cite: 2]
+                sheetName: "Coffre",[cite: 2]
+                name: item.name,[cite: 2]
+                state: item.category || "Divers",[cite: 2]
+                qty: newQty,[cite: 2]
+                author: authorName,[cite: 2]
+                category: "Coffre Commun",[cite: 2]
+                actionText: msg[cite: 2]
+            });[cite: 2]
+        });[cite: 2]
+    });[cite: 2]
 
-    tbody.querySelectorAll('.delete-coffre-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const targetName = decodeURIComponent(e.currentTarget.dataset.name);
-            const targetCat = decodeURIComponent(e.currentTarget.dataset.cat);
+    tbody.querySelectorAll('.delete-coffre-btn').forEach(btn => {[cite: 2]
+        btn.addEventListener('click', (e) => {[cite: 2]
+            const targetName = decodeURIComponent(e.currentTarget.dataset.name);[cite: 2]
+            const targetCat = decodeURIComponent(e.currentTarget.dataset.cat);[cite: 2]
 
-            const idx = coffreStock.findIndex(
-                i => String(i.name).trim().toLowerCase() === targetName.trim().toLowerCase() &&
-                     String(i.category || 'Divers').trim().toLowerCase() === targetCat.trim().toLowerCase()
-            );
-            if (idx === -1) return;
-            const item = coffreStock[idx];
+            const idx = coffreStock.findIndex([cite: 2]
+                i => String(i.name).trim().toLowerCase() === targetName.trim().toLowerCase() &&[cite: 2]
+                     String(i.category || 'Divers').trim().toLowerCase() === targetCat.trim().toLowerCase()[cite: 2]
+            );[cite: 2]
+            if (idx === -1) return;[cite: 2]
+            const item = coffreStock[idx];[cite: 2]
 
-            if (confirm(`Voulez-vous retirer définitivement "${item.name}" du Coffre Commun ?`)) {
-                coffreStock.splice(idx, 1);
-                saveCoffreCache();
-                renderCoffreStock();
+            if (confirm(`Voulez-vous retirer définitivement "${item.name}" du Coffre Commun ?`)) {[cite: 2]
+                coffreStock.splice(idx, 1);[cite: 2]
+                renderCoffreStock();[cite: 2]
 
-                const authorName = currentUser ? currentUser.rpName : "Anonyme";
-                await syncWithGoogleSheets({
-                    action: "delete_item",
-                    sheetName: "Coffre",
-                    name: item.name,
-                    state: item.category || "Divers",
-                    author: authorName,
-                    category: "Coffre Commun",
-                    actionText: `Suppression de "${item.name}" (${item.category}) du Coffre Commun.`
-                });
-            }
-        });
-    });
-}
+                const authorName = currentUser ? currentUser.rpName : "Anonyme";[cite: 2]
+                const msg = `Suppression de "${item.name}" (${item.category}) du Coffre Commun.`;
+                appendLocalLog("Coffre Commun", msg);
 
-document.getElementById('add-coffre-btn')?.addEventListener('click', () => {
-    const select = document.getElementById('coffre-category');
-    if (select && currentCoffreFilter !== "Toutes") {
-        select.value = currentCoffreFilter;
-    }
-    document.getElementById('coffre-modal')?.classList.remove('hidden');
-});
+                syncWithGoogleSheets({[cite: 2]
+                    action: "delete_item",[cite: 2]
+                    sheetName: "Coffre",[cite: 2]
+                    name: item.name,[cite: 2]
+                    state: item.category || "Divers",[cite: 2]
+                    author: authorName,[cite: 2]
+                    category: "Coffre Commun",[cite: 2]
+                    actionText: msg[cite: 2]
+                });[cite: 2]
+            }[cite: 2]
+        });[cite: 2]
+    });[cite: 2]
+}[cite: 2]
 
-document.getElementById('coffre-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const category = document.getElementById('coffre-category').value;
-    const name = document.getElementById('coffre-name').value.trim();
-    const qty = Math.max(1, parseInt(document.getElementById('coffre-qty').value) || 1);
+document.getElementById('add-coffre-btn')?.addEventListener('click', () => {[cite: 2]
+    const select = document.getElementById('coffre-category');[cite: 2]
+    if (select && currentCoffreFilter !== "Toutes") {[cite: 2]
+        select.value = currentCoffreFilter;[cite: 2]
+    }[cite: 2]
+    document.getElementById('coffre-modal')?.classList.remove('hidden');[cite: 2]
+});[cite: 2]
 
-    if (!name) return;
+document.getElementById('coffre-form')?.addEventListener('submit', (e) => {[cite: 2]
+    e.preventDefault();[cite: 2]
+    const category = document.getElementById('coffre-category').value;[cite: 2]
+    const name = document.getElementById('coffre-name').value.trim();[cite: 2]
+    const qty = Math.max(1, parseInt(document.getElementById('coffre-qty').value) || 1);[cite: 2]
 
-    document.getElementById('coffre-modal')?.classList.add('hidden');
-    document.getElementById('coffre-form').reset();
+    if (!name) return;[cite: 2]
 
-    const authorName = currentUser ? currentUser.rpName : "Anonyme";
+    document.getElementById('coffre-modal')?.classList.add('hidden');[cite: 2]
+    document.getElementById('coffre-form').reset();[cite: 2]
 
-    const existing = coffreStock.find(
-        i => String(i.name).trim().toLowerCase() === name.toLowerCase() &&
-             String(i.category || 'Divers').trim().toLowerCase() === category.toLowerCase()
-    );
-    if (existing) {
-        existing.qty = (parseInt(existing.qty) || 0) + qty;
-    } else {
-        coffreStock.push({ name: name, category: category, qty: qty });
-    }
-    saveCoffreCache();
-    renderCoffreStock();
+    const authorName = currentUser ? currentUser.rpName : "Anonyme";[cite: 2]
 
-    await syncWithGoogleSheets({
-        action: "add_item",
-        sheetName: "Coffre",
-        name: name,
-        state: category,
-        qty: qty,
-        author: authorName,
-        category: "Coffre Commun",
-        actionText: `Dépôt dans le Coffre Commun : ${qty}x "${name}" (${category})`
-    });
-});
+    const existing = coffreStock.find([cite: 2]
+        i => String(i.name).trim().toLowerCase() === name.toLowerCase() &&[cite: 2]
+             String(i.category || 'Divers').trim().toLowerCase() === category.toLowerCase()[cite: 2]
+    );[cite: 2]
+    if (existing) {[cite: 2]
+        existing.qty = (parseInt(existing.qty) || 0) + qty;[cite: 2]
+    } else {[cite: 2]
+        coffreStock.push({ name: name, category: category, qty: qty });[cite: 2]
+    }[cite: 2]
+    renderCoffreStock();[cite: 2]
+
+    const msg = `Dépôt dans le Coffre Commun : ${qty}x "${name}" (${category})`;
+    appendLocalLog("Coffre Commun", msg);
+
+    syncWithGoogleSheets({[cite: 2]
+        action: "add_item",[cite: 2]
+        sheetName: "Coffre",[cite: 2]
+        name: name,[cite: 2]
+        state: category,[cite: 2]
+        qty: qty,[cite: 2]
+        author: authorName,[cite: 2]
+        category: "Coffre Commun",[cite: 2]
+        actionText: msg[cite: 2]
+    });[cite: 2]
+});[cite: 2]
 
 // --- GESTION DES RECETTES PAR ONGLET ---
 function renderRecipes() {[cite: 2]
@@ -517,20 +529,26 @@ function renderRecipes() {[cite: 2]
     });[cite: 2]
 
     document.querySelectorAll('.delete-recipe-btn').forEach(btn => {[cite: 2]
-        btn.addEventListener('click', async (e) => {[cite: 2]
+        btn.addEventListener('click', (e) => {[cite: 2]
             const index = e.currentTarget.dataset.index;[cite: 2]
             const recipe = recipesList[index];[cite: 2]
             if (!recipe) return;[cite: 2]
 
             if (confirm(`Voulez-vous vraiment supprimer la recette "${recipe.name}" ?`)) {[cite: 2]
-                await syncWithGoogleSheets({[cite: 2]
+                const catName = recipe.type || recipe.category || "Enchantement";
+                recipesList.splice(index, 1);
+                renderRecipes();
+
+                const msg = `Suppression de la recette : ${recipe.name}`;
+                appendLocalLog(catName, msg);
+
+                syncWithGoogleSheets({[cite: 2]
                     action: "delete_recipe",[cite: 2]
                     name: recipe.name,[cite: 2]
                     author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
-                    category: recipe.type || recipe.category || "Enchantement",[cite: 2]
-                    actionText: `Suppression de la recette : ${recipe.name}`[cite: 2]
+                    category: catName,[cite: 2]
+                    actionText: msg[cite: 2]
                 });[cite: 2]
-                await loadDataFromGoogleSheets();[cite: 2]
             }[cite: 2]
         });[cite: 2]
     });[cite: 2]
@@ -547,7 +565,7 @@ document.querySelectorAll('.open-recipe-modal-btn').forEach(btn => {[cite: 2]
     });[cite: 2]
 });[cite: 2]
 
-document.getElementById('recipe-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('recipe-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const index = document.getElementById('recipe-index').value;[cite: 2]
     const category = document.getElementById('recipe-category').value;[cite: 2]
@@ -558,23 +576,30 @@ document.getElementById('recipe-form')?.addEventListener('submit', async (e) => 
     document.getElementById('recipe-form').reset();[cite: 2]
 
     const isEditing = index !== "";[cite: 2]
+    if (isEditing && recipesList[index]) {
+        recipesList[index] = { category: category, name: name, ingredients: ingredients };
+    } else {
+        recipesList.push({ category: category, name: name, ingredients: ingredients });
+    }
+    renderRecipes();
 
-    await syncWithGoogleSheets({[cite: 2]
+    const msg = `${isEditing ? "Modification" : "Création"} de la recette : "${name}"`;
+    appendLocalLog(category, msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: isEditing ? "edit_recipe" : "add_recipe",[cite: 2]
         index: index,[cite: 2]
         category: category,[cite: 2]
         name: name,[cite: 2]
         ingredients: ingredients,[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
-        actionText: `${isEditing ? "Modification" : "Création"} de la recette : "${name}"`[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 // --- AJOUTS DE STOCK MÉTIERS ---
 document.getElementById('add-gem-btn')?.addEventListener('click', () => document.getElementById('gem-modal')?.classList.remove('hidden'));[cite: 2]
-document.getElementById('gem-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('gem-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const name = document.getElementById('gem-name')?.value;[cite: 2]
     const state = document.getElementById('gem-state')?.value;[cite: 2]
@@ -583,21 +608,27 @@ document.getElementById('gem-form')?.addEventListener('submit', async (e) => {[c
     document.getElementById('gem-modal')?.classList.add('hidden');[cite: 2]
     document.getElementById('gem-form')?.reset();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const existing = gemsStock.find(g => g.name === name && g.state === state);
+    if (existing) existing.qty = (parseInt(existing.qty) || 0) + qty;
+    else gemsStock.push({ name: name, state: state, qty: qty });
+    renderGenericStock('gems-unified-body', gemsStock, 'enchanteur', 'Gems');
+
+    const msg = "Ajout gemme : " + qty + "x " + name + " (" + state + ")";
+    appendLocalLog("Enchantement", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "add_gem",[cite: 2]
         name: name,[cite: 2]
         state: state,[cite: 2]
         qty: qty,[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
         category: "Enchantement",[cite: 2]
-        actionText: "Ajout gemme : " + qty + "x " + name + " (" + state + ")"[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 document.getElementById('add-ingredient-btn')?.addEventListener('click', () => document.getElementById('ingredient-modal')?.classList.remove('hidden'));[cite: 2]
-document.getElementById('ingredient-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('ingredient-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const name = document.getElementById('ing-name').value;[cite: 2]
     const qty = parseInt(document.getElementById('ing-qty').value) || 1;[cite: 2]
@@ -605,21 +636,27 @@ document.getElementById('ingredient-form')?.addEventListener('submit', async (e)
     document.getElementById('ingredient-modal')?.classList.add('hidden');[cite: 2]
     document.getElementById('ingredient-form').reset();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const existing = ingredientsStock.find(i => i.name === name);
+    if (existing) existing.qty = (parseInt(existing.qty) || 0) + qty;
+    else ingredientsStock.push({ name: name, qty: qty });
+    renderGenericStock('ingredients-table-body', ingredientsStock, 'alchimiste', 'Ingredients');
+
+    const msg = "Ajout ingrédient : " + qty + "x " + name;
+    appendLocalLog("Alchimie", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "add_item",[cite: 2]
         sheetName: "Ingredients",[cite: 2]
         name: name,[cite: 2]
         qty: qty,[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
         category: "Alchimie",[cite: 2]
-        actionText: "Ajout ingrédient : " + qty + "x " + name[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 document.getElementById('add-forge-mat-btn')?.addEventListener('click', () => document.getElementById('forge-mat-modal')?.classList.remove('hidden'));[cite: 2]
-document.getElementById('forge-mat-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('forge-mat-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const name = document.getElementById('fmat-name').value;[cite: 2]
     const qty = parseInt(document.getElementById('fmat-qty').value) || 1;[cite: 2]
@@ -627,21 +664,27 @@ document.getElementById('forge-mat-form')?.addEventListener('submit', async (e) 
     document.getElementById('forge-mat-modal')?.classList.add('hidden');[cite: 2]
     document.getElementById('forge-mat-form').reset();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const existing = forgeStock.find(f => f.name === name);
+    if (existing) existing.qty = (parseInt(existing.qty) || 0) + qty;
+    else forgeStock.push({ name: name, qty: qty });
+    renderGenericStock('forge-materials-body', forgeStock, 'forgeron', 'Forge');
+
+    const msg = "Ajout matériau forge : " + qty + "x " + name;
+    appendLocalLog("Forge", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "add_item",[cite: 2]
         sheetName: "Forge",[cite: 2]
         name: name,[cite: 2]
         qty: qty,[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
         category: "Forge",[cite: 2]
-        actionText: "Ajout matériau forge : " + qty + "x " + name[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 document.getElementById('add-cloth-btn')?.addEventListener('click', () => document.getElementById('cloth-modal')?.classList.remove('hidden'));[cite: 2]
-document.getElementById('cloth-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('cloth-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const name = document.getElementById('cloth-name').value;[cite: 2]
     const qty = parseInt(document.getElementById('cloth-qty').value) || 1;[cite: 2]
@@ -649,17 +692,23 @@ document.getElementById('cloth-form')?.addEventListener('submit', async (e) => {
     document.getElementById('cloth-modal')?.classList.add('hidden');[cite: 2]
     document.getElementById('cloth-form').reset();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const existing = clothStock.find(c => c.name === name);
+    if (existing) existing.qty = (parseInt(existing.qty) || 0) + qty;
+    else clothStock.push({ name: name, qty: qty });
+    renderGenericStock('cloth-stock-body', clothStock, 'couturier', 'Couture');
+
+    const msg = "Ajout étoffe : " + qty + "x " + name;
+    appendLocalLog("Couture", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "add_item",[cite: 2]
         sheetName: "Couture",[cite: 2]
         name: name,[cite: 2]
         qty: qty,[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
         category: "Couture",[cite: 2]
-        actionText: "Ajout étoffe : " + qty + "x " + name[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 // VENTES
@@ -667,7 +716,7 @@ document.querySelectorAll('.open-sale-modal-btn').forEach(btn => {[cite: 2]
     btn.addEventListener('click', () => document.getElementById('sale-modal')?.classList.remove('hidden'));[cite: 2]
 });[cite: 2]
 
-document.getElementById('sale-form')?.addEventListener('submit', async (e) => {[cite: 2]
+document.getElementById('sale-form')?.addEventListener('submit', (e) => {[cite: 2]
     e.preventDefault();[cite: 2]
     const item = document.getElementById('sale-item').value;[cite: 2]
     const amount = parseInt(document.getElementById('sale-amount').value) || 0;[cite: 2]
@@ -675,14 +724,15 @@ document.getElementById('sale-form')?.addEventListener('submit', async (e) => {[
     document.getElementById('sale-modal')?.classList.add('hidden');[cite: 2]
     document.getElementById('sale-form').reset();[cite: 2]
 
-    await syncWithGoogleSheets({[cite: 2]
+    const msg = "Vente de \"" + item + "\" pour " + amount + " Septims.";
+    appendLocalLog("Vente", msg);
+
+    syncWithGoogleSheets({[cite: 2]
         action: "record_sale",[cite: 2]
         author: currentUser ? currentUser.rpName : "Anonyme",[cite: 2]
         category: "Vente",[cite: 2]
-        actionText: "Vente de \"" + item + "\" pour " + amount + " Septims."[cite: 2]
+        actionText: msg[cite: 2]
     });[cite: 2]
-
-    await loadDataFromGoogleSheets();[cite: 2]
 });[cite: 2]
 
 // FERMETURE DES MODALES
@@ -694,17 +744,12 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => {[cite: 2]
 });[cite: 2]
 
 // ENVOI DE DONNÉES À GOOGLE SHEETS
-async function syncWithGoogleSheets(data) {[cite: 2]
+function syncWithGoogleSheets(data) {[cite: 2]
     if (!GOOGLE_SHEET_URL) return;[cite: 2]
-    try {[cite: 2]
-        await fetch(GOOGLE_SHEET_URL, {[cite: 2]
-            method: 'POST',[cite: 2]
-            mode: 'no-cors',[cite: 2]
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },[cite: 2]
-            body: JSON.stringify(data)[cite: 2]
-        });[cite: 2]
-        await new Promise(resolve => setTimeout(resolve, 600));[cite: 2]
-    } catch (err) {[cite: 2]
-        console.error("Erreur de synchronisation Google Sheets :", err);[cite: 2]
-    }[cite: 2]
+    fetch(GOOGLE_SHEET_URL, {[cite: 2]
+        method: 'POST',[cite: 2]
+        mode: 'no-cors',[cite: 2]
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },[cite: 2]
+        body: JSON.stringify(data)[cite: 2]
+    }).catch(err => console.error("Erreur de synchronisation Google Sheets :", err));[cite: 2]
 }[cite: 2]
