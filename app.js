@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDataFromGoogleSheets() {
     if (!GOOGLE_SHEET_URL) return;
     try {
-        const response = await fetch(GOOGLE_SHEET_URL);
+        const response = await fetch(GOOGLE_SHEET_URL + "?t=" + Date.now());
         const data = await response.json();
 
         membersList = data.members || [];
@@ -163,7 +163,7 @@ function renderActivityLog() {
     ).join('');
 }
 
-// --- RENDU DES STOCKS MÉTIERS (MODIFICATION PAR AJOUT/RETRAIT PRÉCIS) ---
+// --- RENDU DES STOCKS MÉTIERS ---
 function renderGenericStock(elementId, list, requiredRole, categoryName) {
     const tbody = document.getElementById(elementId);
     if (!tbody) return;
@@ -370,6 +370,7 @@ function renderCoffreStock() {
                     action: "delete_item",
                     sheetName: "Coffre",
                     name: item.name,
+                    state: item.category || "Divers",
                     author: authorName,
                     category: "Coffre Commun",
                     actionText: `Suppression de "${item.name}" (${item.category}) du Coffre Commun.`
@@ -394,10 +395,21 @@ document.getElementById('coffre-form')?.addEventListener('submit', async (e) => 
     const name = document.getElementById('coffre-name').value.trim();
     const qty = parseInt(document.getElementById('coffre-qty').value) || 1;
 
+    if (!name) return;
+
     document.getElementById('coffre-modal')?.classList.add('hidden');
     document.getElementById('coffre-form').reset();
 
     const authorName = currentUser ? currentUser.rpName : "Anonyme";
+
+    // Mise à jour locale immédiate pour un retour visuel instantané
+    const existing = coffreStock.find(i => i.name.toLowerCase() === name.toLowerCase() && (i.category || 'Divers').toLowerCase() === category.toLowerCase());
+    if (existing) {
+        existing.qty = (parseInt(existing.qty) || 0) + qty;
+    } else {
+        coffreStock.push({ name: name, category: category, qty: qty });
+    }
+    renderCoffreStock();
 
     await syncWithGoogleSheets({
         action: "add_item",
@@ -652,9 +664,11 @@ async function syncWithGoogleSheets(data) {
         await fetch(GOOGLE_SHEET_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(data)
         });
+        // Petite pause pour laisser à Google Sheets le temps d'écrire la ligne avant de recharger
+        await new Promise(resolve => setTimeout(resolve, 800));
     } catch (err) {
         console.error("Erreur de synchronisation Google Sheets :", err);
     }
