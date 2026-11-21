@@ -31,6 +31,7 @@
             <button class="tab-btn" data-tab="alchimie">🧪 Alchimie</button>
             <button class="tab-btn" data-tab="forge">🔨 Forge</button>
             <button class="tab-btn" data-tab="couturier">🧵 Couturier</button>
+            <button class="tab-btn" data-tab="coffre">📦 Coffre Commun</button>
             <button class="tab-btn" data-tab="membres">📜 Membres</button>
             <button class="tab-btn" data-tab="journal">📖 Journal de Bord</button>
         </nav>
@@ -61,6 +62,7 @@
                                 <th>Type de Gemme</th>
                                 <th>État</th>
                                 <th>Quantité</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="gems-unified-body"></tbody>
@@ -103,14 +105,14 @@
                 <section class="enchantment-section">
                     <h3>🌱 Ingrédients Alchimiques</h3>
                     <table class="skyrim-table">
-                <thead>
-                    <tr>
-                        <th>Type de Élément / Matériau</th>
-                        <th>État / Catégorie</th>
-                        <th style="text-align: center;">Stock Réel</th>
-                        <th>Modifier / Actions</th>
-                    </tr>
-                </thead>
+                        <thead>
+                            <tr>
+                                <th>Type de Élément / Matériau</th>
+                                <th>État / Catégorie</th>
+                                <th style="text-align: center;">Stock Réel</th>
+                                <th>Modifier / Actions</th>
+                            </tr>
+                        </thead>
                         <tbody id="ingredients-table-body"></tbody>
                     </table>
                 </section>
@@ -153,6 +155,7 @@
                                 <th>Matériau</th>
                                 <th>Catégorie</th>
                                 <th>Quantité</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="forge-materials-body"></tbody>
@@ -197,6 +200,7 @@
                                 <th>Étoffe / Fil</th>
                                 <th>Catégorie</th>
                                 <th>Quantité</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="cloth-stock-body"></tbody>
@@ -213,6 +217,47 @@
                             </tr>
                         </thead>
                         <tbody id="recipes-couture-body"></tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ONGLET COFFRE COMMUN -->
+            <div id="tab-coffre" class="tab-content">
+                <div class="tab-header">
+                    <div>
+                        <h2>📦 Coffre Commun du Clan</h2>
+                        <p>Accessible à tous les membres connectés pour déposer ou retirer du matériel</p>
+                    </div>
+                </div>
+
+                <div class="inventory-controls" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="add-coffre-btn" class="skyrim-btn hidden">+ Ajouter un objet au Coffre</button>
+                </div>
+
+                <!-- Sous-catégories -->
+                <div class="sub-tabs" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; border-bottom: 1px solid #3d3323; padding-bottom: 15px;">
+                    <button class="skyrim-btn-small coffre-cat-btn active" data-cat="Toutes" style="border-color: #ffd700; color: #ffd700;">Tout voir</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Arme">⚔️ Arme</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Armure">🛡️ Armure</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Potion">🧪 Potion</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Livre">📕 Livre</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Ingrédients">🌿 Ingrédients</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Nourriture">🍖 Nourriture</button>
+                    <button class="skyrim-btn-small coffre-cat-btn" data-cat="Divers">🎒 Divers</button>
+                </div>
+
+                <section class="enchantment-section">
+                    <h3 id="coffre-current-title">📦 Contenu du Coffre Commun (Toutes catégories)</h3>
+                    <table class="skyrim-table">
+                        <thead>
+                            <tr>
+                                <th>Nom de l'Objet</th>
+                                <th>Sous-catégorie</th>
+                                <th style="text-align: center;">Stock Réel</th>
+                                <th>Ajouter / Retirer / Supprimer</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coffre-table-body"></tbody>
                     </table>
                 </section>
             </div>
@@ -235,6 +280,14 @@
                     <p>Historique des actions</p>
                 </div>
                 <table class="skyrim-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Membre</th>
+                            <th>Catégorie</th>
+                            <th>Action effectuée</th>
+                        </tr>
+                    </thead>
                     <tbody id="activity-log-body"></tbody>
                 </table>
             </div>
@@ -381,6 +434,39 @@
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <button type="submit" class="skyrim-btn">Ajouter</button>
                     <button type="button" class="skyrim-btn close-modal-btn" data-target="cloth-modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE COFFRE COMMUN -->
+    <div id="coffre-modal" class="modal hidden">
+        <div class="modal-content skyrim-card">
+            <h3>📦 Ajouter au Coffre Commun</h3>
+            <form id="coffre-form">
+                <div class="form-group">
+                    <label>Sous-catégorie :</label>
+                    <select id="coffre-category" required>
+                        <option value="Arme">Arme</option>
+                        <option value="Armure">Armure</option>
+                        <option value="Potion">Potion</option>
+                        <option value="Livre">Livre</option>
+                        <option value="Ingrédients">Ingrédients</option>
+                        <option value="Nourriture">Nourriture</option>
+                        <option value="Divers">Divers</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nom de l'objet :</label>
+                    <input type="text" id="coffre-name" required placeholder="Ex: Épée d'Acier / Potion de Vigueur">
+                </div>
+                <div class="form-group">
+                    <label>Quantité initiale :</label>
+                    <input type="number" id="coffre-qty" required value="1" min="1">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button type="submit" class="skyrim-btn">Ajouter au Coffre</button>
+                    <button type="button" class="skyrim-btn close-modal-btn" data-target="coffre-modal">Annuler</button>
                 </div>
             </form>
         </div>
